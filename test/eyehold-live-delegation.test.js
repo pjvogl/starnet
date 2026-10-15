@@ -69,7 +69,7 @@ async function run(){
        transcriptText=(payload.turns||[]).filter(t=>t.role==='assistant').map(t=>typeof t.content==='string'?t.content:'').join(' ').trim();
      }
    }
-   const deliverable=String(worker.deliveryText||transcriptText||'').trim();
+   const deliverable=String((String(worker.deliveryText||'').length>=String(transcriptText||'').length?worker.deliveryText:transcriptText)||'').trim();
    if(process.env.EYEHOLD_DELIVERABLE_DIR&&worker.delegatedBy==='agent'&&deliverable.length>20){
      const dest=path.resolve(process.env.EYEHOLD_DELIVERABLE_DIR);
      fs.mkdirSync(dest,{recursive:true,mode:0o700});
