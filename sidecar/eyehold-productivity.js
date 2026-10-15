@@ -9,6 +9,9 @@ const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
 function creditedPool(receipt){
  if(!receipt||receipt.verified!==true||receipt.accepted!==true||!valid(receipt.taskId)||!valid(receipt.deliverableId)||!valid(receipt.runId))return 0;
  if(!['user','objective-test','external'].includes(receipt.verificationMethod))return 0;
+ // Nonnegotiable: no Crowns for work without an approved business goal and
+ // independently accepted evidence of material progress toward that goal.
+ if(!valid(receipt.goalId)||receipt.goalAdvanced!==true||!valid(receipt.goalEvidenceRef))return 0;
  if(!Array.isArray(receipt.evidenceRefs)||!receipt.evidenceRefs.length||!receipt.evidenceRefs.every(valid))return 0;
  const quality=integer(receipt.quality,1,5)?receipt.quality:0;
  const bonus=receipt.testPassed===true?5:0;
@@ -31,7 +34,7 @@ function apply(ledger,receipt){
  const revision=integer(receipt.acceptanceRevision,1,100000)?receipt.acceptanceRevision:1;
  const key=[receipt.taskId,receipt.deliverableId,revision].join('|');
  if(events.some(e=>e&&e.key===key))return {events:events.slice(),result:{crowns:0,allocations:[],reason:'duplicate'}};
- const event={key,taskId:receipt.taskId,runId:receipt.runId,deliverableId:receipt.deliverableId,acceptanceRevision:revision,verificationMethod:receipt.verificationMethod,evidenceRefs:receipt.evidenceRefs.slice(),crowns:result.crowns,allocations:result.allocations};
+ const event={key,goalId:receipt.goalId,goalEvidenceRef:receipt.goalEvidenceRef,taskId:receipt.taskId,runId:receipt.runId,deliverableId:receipt.deliverableId,acceptanceRevision:revision,verificationMethod:receipt.verificationMethod,evidenceRefs:receipt.evidenceRefs.slice(),crowns:result.crowns,allocations:result.allocations};
  return {events:[...events,event],result};
 }
 function evaluateAgent(history){
