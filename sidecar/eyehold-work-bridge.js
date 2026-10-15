@@ -14,6 +14,7 @@ function createBridge({file,getRun,getAcceptance,getHistory}){
   if(run.status!=='completed'||run.agentId==null||acceptance.accepted!==true)return false;
   if(acceptance.goalAdvanced!==true||typeof acceptance.goalId!=='string'||typeof acceptance.goalEvidenceRef!=='string')return false;
   if(receipt.goalAdvanced!==acceptance.goalAdvanced||receipt.goalId!==acceptance.goalId||receipt.goalEvidenceRef!==acceptance.goalEvidenceRef)return false;
+  if(!Array.isArray(acceptance.evidenceRefs)||!acceptance.evidenceRefs.includes(acceptance.goalEvidenceRef))return false;
   if(acceptance.runId!==receipt.runId||acceptance.taskId!==receipt.taskId||acceptance.deliverableId!==receipt.deliverableId)return false;
   if(!Array.isArray(acceptance.evidenceRefs)||!acceptance.evidenceRefs.length)return false;
   if(JSON.stringify(acceptance.evidenceRefs)!==JSON.stringify(receipt.evidenceRefs))return false;
