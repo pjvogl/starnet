@@ -34,3 +34,8 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - Added guarded bootstrap installer `scripts/eyehold-install-host-wiring.cjs` and `.github/workflows/eyehold-phase4-install-host.yml`, which can commit `sidecar/index.js` only after syntax and offline tests pass. The workflow was configured to trigger by a branch push.
 - **Security:** bootstrap deliberately uses `verifyEvidence: () => false`. This installs infrastructure but will not award production Crowns until a separate reviewer-authorized business-evidence verification mechanism is implemented and tested. No automatic real financial success is claimed.
 - Confirm workflow success and resulting host commit before changing the production-host milestone status.
+
+## Operator approval milestone
+- Host bootstrap was reported green; `sidecar/index.js` now has a different blob SHA from the earlier read, consistent with an installation commit. The live evidence callback remains intentionally `verifyEvidence: () => false`.
+- Added `sidecar/eyehold-review-gate.js` and `test/eyehold-review-gate.test.js`: authenticated operator identity, matching run/goal/evidence and independent evidence inspection are all required. CI workflow updated; green result not yet confirmed.
+- **Still pending:** bind operator identity to a real authenticated sidecar request/session, expose an owner-only review action, and invoke acceptance within the single sidecar writer. Do not expose unrestricted approval or treat simulated auth test as production authentication.
