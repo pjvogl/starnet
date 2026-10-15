@@ -12,6 +12,8 @@ function createBridge({file,getRun,getAcceptance,getHistory}){
   const acceptance=getAcceptance(receipt.taskId,receipt.deliverableId);
   if(!run||!acceptance||run.id!==receipt.runId||run.taskId!==receipt.taskId)return false;
   if(run.status!=='completed'||run.agentId==null||acceptance.accepted!==true)return false;
+  if(acceptance.goalAdvanced!==true||typeof acceptance.goalId!=='string'||typeof acceptance.goalEvidenceRef!=='string')return false;
+  if(receipt.goalAdvanced!==acceptance.goalAdvanced||receipt.goalId!==acceptance.goalId||receipt.goalEvidenceRef!==acceptance.goalEvidenceRef)return false;
   if(acceptance.runId!==receipt.runId||acceptance.taskId!==receipt.taskId||acceptance.deliverableId!==receipt.deliverableId)return false;
   if(!Array.isArray(acceptance.evidenceRefs)||!acceptance.evidenceRefs.length)return false;
   if(JSON.stringify(acceptance.evidenceRefs)!==JSON.stringify(receipt.evidenceRefs))return false;
@@ -27,7 +29,7 @@ function createBridge({file,getRun,getAcceptance,getHistory}){
   if(!a||!a.accepted)return {ok:false,reason:'no-accepted-deliverable'};
   const run=getRun(a.runId);
   if(!run)return {ok:false,reason:'run-not-found'};
-  const receipt={verified:true,accepted:true,taskId,deliverableId,runId:a.runId,verificationMethod:a.verificationMethod,evidenceRefs:a.evidenceRefs,quality:a.quality,testPassed:a.testPassed,predeclaredComplexity:a.predeclaredComplexity,contributors:a.contributors,acceptanceRevision:a.acceptanceRevision||1};
+  const receipt={verified:true,accepted:true,goalId:a.goalId,goalAdvanced:a.goalAdvanced,goalEvidenceRef:a.goalEvidenceRef,taskId,deliverableId,runId:a.runId,verificationMethod:a.verificationMethod,evidenceRefs:a.evidenceRefs,quality:a.quality,testPassed:a.testPassed,predeclaredComplexity:a.predeclaredComplexity,contributors:a.contributors,acceptanceRevision:a.acceptanceRevision||1};
   return ledger.record(receipt);
  }
  function evaluate(agentId){
