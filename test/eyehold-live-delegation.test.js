@@ -18,7 +18,7 @@ async function run(){
  await wait();const token=await bootToken(base,base);
  const headers={'Content-Type':'application/json','X-StarNet-Token':token,Origin:base};
  const roster=await fetch(base+'/api/roster',{method:'POST',headers,body:JSON.stringify({agents:[
-  {agentId:'agent',name:'THE EYE',model,provider:'openrouter',system:'You are The Eye, supervisor. Delegate the specified engineering task to DEEPFORGE using team_dispatch with the exact session title engineering for the worker. Do not claim a result unless its worker run completed.'},
+  {agentId:'agent',name:'THE EYE',model,provider:'openrouter',system:'You are The Eye, supervisor. Delegate the specified engineering task to DEEPFORGE using team_dispatch with workers:[{agentId:"deepforge",prompt:"...",session:"engineering"}]. The session property is mandatory. Do not claim a result unless its worker run completed.'},
   {agentId:'deepforge',name:'DEEPFORGE',model,provider:'openrouter',specialtyId:'eyehold-forge',system:'Deepforge engineer. Answer the delegated task concisely. Never claim tools ran unless they actually did.'}
  ],updatedAt:Date.now()})});if(!roster.ok)throw Error('Roster rejected: HTTP '+roster.status);
  // A remote delegated worker needs a connected station client for lifecycle
@@ -32,7 +32,7 @@ async function run(){
   (async()=>{try{while(true){const {value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});let nl;while((nl=buf.indexOf('\n'))>=0){const line=buf.slice(0,nl).trim();buf=buf.slice(nl+1);if(!line.startsWith('data:'))continue;let ev;try{ev=JSON.parse(line.slice(5));}catch{continue;}if(ev?.name!=='station.command')continue;const p=ev.payload||{};station.push({verb:p.verb,args:p.verb==='station.deliver'?{agentId:p.args?.agentId,runId:p.args?.runId,textLength:String(p.args?.text||'').length}:null});let response={ok:false,error:'unsupported station command'};if(p.verb==='station.sessions')response={ok:true,result:{sessions:[{id:'ws_deepforge',title:'engineering',agentId:'deepforge'}]}};if(p.verb==='station.deliver')response={ok:true,result:{folded:true,session:'engineering'}};if(['station.dispatch_start','station.dispatch_end'].includes(p.verb))response={ok:true,result:{session:'engineering'}};await fetch(base+'/api/station/ack',{method:'POST',headers,body:JSON.stringify({id:p.id,...response})}).catch(()=>{});}}}catch{} })();return true;
  });
  await ready;await sleep(250);
- const prompt='Delegate exactly ONE small task to agentId deepforge via team_dispatch: write a two-sentence description of one safe test to verify a Node.js module loads successfully. The worker MUST be dispatched with session: engineering (not omitted). Do not invent the worker result or do the work yourself. Report the actual worker output.';
+ const prompt='Use team_dispatch with exactly this JSON shape: {"workers":[{"agentId":"deepforge","prompt":"Write a two-sentence description of one safe test to verify a Node.js module loads successfully.","session":"engineering"}]}. Delegate exactly ONE small task: write a two-sentence description of one safe test to verify a Node.js module loads successfully. The worker MUST be dispatched with session: engineering (not omitted). Do not invent the worker result or do the work yourself. Report the actual worker output.';
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),75000);
  let events=[],approvedPromptIds=new Set(),runId='';
  try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{
@@ -70,7 +70,14 @@ async function run(){
    details.push({runId:worker.runId,delegatedBy:worker.delegatedBy,streamIdPresent:!!worker.streamId,deliveryTextLength:String(worker.deliveryText||'').length,transcriptTextLength:transcriptText.length,reason:worker.reason||worker.status||null,outputVerified:!!worker.runId&&worker.delegatedBy==='agent'&&(String(worker.deliveryText||'').length>20||transcriptText.length>20)});
  }
  const success=details.some(d=>d.outputVerified);
- const summary={leadStart:events.some(e=>e.name==='agent.run.start'),leadEnd:events.filter(e=>e.name==='agent.run.end').map(e=>e.payload?.reason),deepforgeRunCount:children.length,deepforgeDeliverableVerified:success,deepforgeEvidence:details,dispatchToolCalls:events.filter(e=>e.name==='agent.tool_call').map(e=>({name:e.payload?.name||null})),stationCommands:station.filter(x=>x?.verb?.startsWith('station.')).length,stationVerbs:station.map(x=>x.verb),delivered:station.filter(x=>x.verb==='station.deliver'),model};
+ const summary={leadStart:events.some(e=>e.name==='agent.run.start'),leadEnd:events.filter(e=>e.name==='agent.run.end').map(e=>e.payload?.reason),deepforgeRunCount:children.length,deepforgeDeliverableVerified:success,deepforgeEvidence:details,dispatchToolCalls:events.filter(e=>e.name==='agent.tool_call').map(e=>{
+   const p=e.payload||{};
+   const raw=p.arguments||p.args||p.input||{};
+   let args=raw;
+   if(typeof raw==='string'){try{args=JSON.parse(raw)}catch{args={parseError:true}}}
+   const workers=Array.isArray(args?.workers)?args.workers:[];
+   return {name:p.name||null,argumentsAvailable:!!(p.arguments||p.args||p.input),workerCount:workers.length,targetAgentIds:workers.map(w=>w.agentId).filter(Boolean),targetSessionTitles:workers.map(w=>w.session||null)};
+ }),stationCommands:station.filter(x=>x?.verb?.startsWith('station.')).length,stationVerbs:station.map(x=>x.verb),toolResults:events.filter(e=>e.name==='agent.tool_result').map(e=>({isError:!!e.payload?.isError,fields:Object.keys(e.payload||{}).filter(k=>!['content','text','result','output'].includes(k))})),delivered:station.filter(x=>x.verb==='station.deliver'),model};
  console.log(JSON.stringify(summary,null,2));
  if(!success)throw Error('Live Deepforge child-run deliverable not established');
 }
