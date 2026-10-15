@@ -1,0 +1,47 @@
+name: Eyehold Phase 4 - Sidecar integration mapping
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  map-hooks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect production wiring seams (no provider credentials)
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const lines=fs.readFileSync('sidecar/index.js','utf8').split('\n');
+          const patterns=[
+            /(?:GET|POST|PUT|DELETE).*\/api\/runs/,
+            /\/api\/runs/,
+            /agent\.run\.end/,
+            /runLedger|runJournal|runStore|runRecords/i,
+            /createServer|server\.listen|\.listen\(/,
+            /eventBus|EventEmitter|emitEvent|broadcastEvent|broadcast\(/,
+            /transcriptStore|transcriptLedger/i
+          ];
+          const found=[];
+          for(let i=0;i<lines.length;i++){
+            const idx=patterns.findIndex(re=>re.test(lines[i]));
+            if(idx<0)continue;
+            const from=Math.max(0,i-2),to=Math.min(lines.length,i+3);
+            const excerpt=lines.slice(from,to).map((v,j)=>({line:from+j+1,code:v.slice(0,220)}));
+            found.push({at:i+1,pattern:idx,excerpt});
+          }
+          const result={file:'sidecar/index.js',totalMatches:found.length,matches:found.slice(0,65),truncated:found.length>65};
+          fs.writeFileSync('eyehold-sidecar-seams.json',JSON.stringify(result,null,2)+'\n');
+          const md=['## Eyehold sidecar integration seams','Source excerpts are truncated to 220 characters per line. No environment values or credentials are printed.','\n```json',JSON.stringify(result,null,2),'```'];
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,md.join('\n'));
+          console.log('Mapped '+found.length+' candidate hooks. See job summary/artifact.');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-sidecar-integration-seams
+          path: eyehold-sidecar-seams.json
