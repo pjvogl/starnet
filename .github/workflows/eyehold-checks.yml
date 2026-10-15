@@ -1,0 +1,49 @@
+name: Eyehold module checks
+
+on:
+  push:
+    branches: [feat/harness-backend]
+    paths:
+      - 'sidecar/eyehold-*.js'
+      - 'frontend/app/eyehold-*.js'
+      - 'frontend/app/worldmodel.js'
+      - 'test/eyehold-*.test.js'
+      - '.github/workflows/eyehold-checks.yml'
+  pull_request:
+    paths:
+      - 'sidecar/eyehold-*.js'
+      - 'frontend/app/eyehold-*.js'
+      - 'frontend/app/worldmodel.js'
+      - 'test/eyehold-*.test.js'
+      - '.github/workflows/eyehold-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eyehold-tests:
+    name: Eyehold unit tests (Node 22)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check modified Eyehold modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in sidecar/eyehold-*.js frontend/app/eyehold-*.js test/eyehold-*.test.js; do
+            node --check "$file"
+          done
+      - name: Execute Eyehold unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in test/eyehold-*.test.js; do
+            echo "::group::$file"
+            node "$file"
+            echo "::endgroup::"
+          done
