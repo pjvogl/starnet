@@ -15,7 +15,6 @@
   },
   "bundle": {
     "active": true,
-    "publisher": "Andrew Sims",
     "targets": [
       "nsis"
     ],
