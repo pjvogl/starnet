@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {snapshot}=require('../sidecar/eyehold-supervisor.js');
+const ledger={totals:()=>({eye:7,forge:30})};
+const histories={eye:[{agentId:'eye',verified:true,outcome:'accepted'}],forge:[{agentId:'forge',verified:true,outcome:'failed'},{agentId:'forge',verified:true,outcome:'failed'},{agentId:'forge',verified:true,outcome:'failed'}]};
+const s=snapshot({ledger,agentIds:['forge','eye','forge','invalid id'],getHistory:id=>histories[id],now:1234});
+assert.equal(s.agents.length,2);
+assert.equal(s.agents[0].crowns,30);
+assert.equal(s.agents[0].advice.action,'request-review');
+assert.equal(s.agents[0].executionStatus,'unknown');
+assert.equal(s.agents[0].acceptanceRate,0);
+assert.equal(s.agents[1].acceptanceRate,1);
+assert.equal(snapshot({ledger,agentIds:['fresh'],getHistory:()=>[],now:123}).agents[0].acceptanceRate,null);
+console.log('Eyehold supervisor snapshot OK');
