@@ -6587,6 +6587,49 @@ const World = (() => {
      loop runs it on the stage every frame; renderStill() runs it once on an offscreen canvas. Everything that
      belongs to the live stage alone (the backdrop, bloom, the curve, scanlines, the heartbeat pixel, the camera
      readout) is skipped for a still. */
+  function drawEyeholdKeepFloor() {
+    if (typeof EyeholdTerritories === 'undefined' || !station.rooms || !geo.origin) return;
+    const tile = geo.TILE || T, ox = geo.origin.tx, oy = geo.origin.ty;
+    const visibleX1 = (-panX / scale) - 24, visibleY1 = (-panY / scale) - 24;
+    const visibleX2 = ((cv.width - panX) / scale) + 24;
+    const visibleY2 = ((cv.height - panY) / scale) + 24;
+    for (const room of station.rooms()) {
+      if (!room || room.kind === 'corridor' || room.eyeTerritory !== 'keep') continue;
+      for (const r of room.rects || []) {
+        const x = (r.x1 - ox) * tile, y = (r.y1 - oy) * tile;
+        const w = (r.x2 - r.x1 + 1) * tile, h = (r.y2 - r.y1 + 1) * tile;
+        if (x + w < visibleX1 || y + h < visibleY1 || x > visibleX2 || y > visibleY2) continue;
+        if (w < 36 || h < 36) continue;
+        const cx = x + w / 2, cy = y + h / 2;
+        ctx.save();
+        // Ember-inlaid floor border: inset so it does not disguise doors or walls.
+        ctx.strokeStyle = 'rgba(199,109,48,0.54)'; ctx.lineWidth = 2;
+        ctx.strokeRect(x + 17, y + 17, w - 34, h - 34);
+        ctx.strokeStyle = 'rgba(245,176,91,0.36)'; ctx.lineWidth = 1;
+        ctx.strokeRect(x + 20, y + 20, w - 40, h - 40);
+        // Original eight-point blackstone compass, rather than a copyrighted character/logo.
+        const rad = Math.max(9, Math.min(32, Math.min(w,h) * 0.2));
+        ctx.fillStyle = 'rgba(18,13,20,0.61)';
+        ctx.beginPath();
+        for (let i=0; i<16; i++) {
+          const a = -Math.PI/2+i*Math.PI/8, d = i%2===0 ? rad : rad*0.55;
+          if (i===0) ctx.moveTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);
+          else ctx.lineTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#a96737'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#e09b56'; ctx.fillRect(Math.round(cx)-3,Math.round(cy)-3,6,6);
+        // Angular copper chevrons suggest a command floor without adding blocking props.
+        ctx.strokeStyle='rgba(211,128,62,0.5)';ctx.lineWidth=2;
+        for (const sign of [-1,1]) {
+          const ax = cx + sign * Math.min(w*0.27,55);
+          ctx.beginPath();ctx.moveTo(ax-sign*6,cy-6);ctx.lineTo(ax,cy);ctx.lineTo(ax-sign*6,cy+6);ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+  }
+
   function drawScene(now, dt, slices) {
     if (!slices) slices = [[dt, now]];
     if (stillPass) { ctx.fillStyle = stillPass.fill; ctx.fillRect(0, 0, cv.width, cv.height); }
@@ -6609,6 +6652,11 @@ const World = (() => {
       sceneRenderer.begin({ geo, cache, now, scale, panX, panY, width: cv.width, height: cv.height, reducedMotion: reduceMotion() });
       sceneRenderer.drawBase(ctx);
     } else ctx.drawImage(cache.baseCv, 0, 0);
+
+    // EYEHOLD — first original environment layer. This draws only a decorative
+    // tapestry/sigil *inside* rooms assigned to the Keep, under props and agents.
+    // It never changes world geometry, pathing, tool permissions, or live status.
+    if (station && geo && geo.origin) drawEyeholdKeepFloor();
 
     // conveyor belts (floor machinery) + the live transport sim — local frame, under entities
     if (geo && geo.belts && typeof Conveyor !== 'undefined') {
