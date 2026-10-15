@@ -11,7 +11,7 @@ Develop a real, authorized AI-agent workforce that produces commercially valuabl
 | Phase 3: summon/dispatch/child-run/session transcript with mock provider | GitHub Actions Phase 3, user reported green | PASS (offline) |
 | Phase 3: actual live The Eye -> Deepforge delegated deliverable | Live workflow `.github/workflows/eyehold-phase3-live-delegation.yml` user reported green after explicit engineering-session routing correction | PASS (live role-specific proof) |
 | Phase 4: goal-aligned accepted-deliverable ledger and supervisor unit proofs | `.github/workflows/eyehold-phase4-crowns.yml`, user reported green after fixture correction | PASS (isolated CI) |
-| Phase 4: install trusted acceptance adapter into running sidecar event bus | Composed trusted Crown runtime committed (`sidecar/eyehold-crown-runtime.js`) and CI test added; host startup installation and review authorization still outstanding | PENDING HOST INSTALL |
+| Phase 4: install trusted acceptance adapter into running sidecar event bus | Composed trusted Crown runtime tests reported green; added guarded sidecar integration interface mapping workflow; host startup installation and review authorization still outstanding | PENDING HOST INSTALL |
 | Full end-to-end: live delegation, accepted evidence, one Crown award, restart persistence | Not yet run | PENDING |
 | Production: unattended jobs, spending controls, revenue accounting | No production/financial proof | PENDING |
 | Release fast-gate source-lock | Protected claim inventory drift is unresolved; do not weaken | BLOCKED |
@@ -25,3 +25,6 @@ Develop a real, authorized AI-agent workforce that produces commercially valuabl
 6. Repair/review the original release claim lock as part of formal release validation, retaining its integrity.
 
 Never report a new phase as completed based solely on committed code. Phase 4's test fixtures are independent of the live server until its startup/event-store seams are verified.
+
+## Production wiring mapping
+The operator reported the composed Crown runtime CI green. `sidecar/index.js` is too large for the connected file reader to return its source; `.github/workflows/eyehold-phase4-integration-mapping.yml` prints bounded run/event API interface excerpts in a GitHub job summary. Review this evidence before editing live startup, and do not award Crowns simply because a run ended.
