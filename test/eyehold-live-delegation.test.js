@@ -34,10 +34,25 @@ async function run(){
  await ready;await sleep(250);
  const prompt='Delegate exactly ONE small task to agentId deepforge via team_dispatch: write a two-sentence description of one safe test to verify a Node.js module loads successfully. Use the engineering session if available. Do not invent the worker result or do the work yourself. Report the actual worker output.';
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),75000);
- let events=[];
- try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{events.push(JSON.parse(line));}catch{}}}}catch(e){
+ let events=[],approvedPromptIds=new Set(),runId='';
+ try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{
+ const ev=JSON.parse(line);events.push(ev);
+ if(ev.name==='agent.run.start'&&ev.payload?.runId)runId=ev.payload.runId;
+ if(ev.name==='permission.prompt'){
+   const id=ev.payload?.promptId;
+   // Approval is ONLY for this isolated, operator-initiated delegation proof,
+   // never persisted and never applied to unrelated future runs.
+   if(id&&runId&&!approvedPromptIds.has(id)){
+     approvedPromptIds.add(id);
+     const permission=await fetch(base+'/api/consent',{method:'POST',headers,
+       body:JSON.stringify({runId,promptId:id,decision:'once'})});
+     console.log('Ephemeral run consent:',JSON.stringify({ok:permission.ok,status:permission.status,promptCount:approvedPromptIds.size}));
+     if(!permission.ok)throw Error('Run consent rejected: HTTP '+permission.status);
+   }
+ }
+}catch(e){if(e.message?.startsWith('Run consent rejected'))throw e;}}}}catch(e){
    const names=events.map(x=>x.name).filter(Boolean);
-   console.error('Delegation stream diagnosis:',JSON.stringify({eventCount:events.length,eventNames:[...new Set(names)].slice(0,20),runStart:names.includes('agent.run.start'),toolCalls:names.filter(n=>n==='agent.tool_call').length,stationCommands:station.slice(-12),timedOut:e?.name==='AbortError'}));
+   console.error('Delegation stream diagnosis:',JSON.stringify({eventCount:events.length,eventNames:[...new Set(names)].slice(0,20),runStart:names.includes('agent.run.start'),toolCalls:names.filter(n=>n==='agent.tool_call').length,stationCommands:station.slice(-12),permissionsAnswered:approvedPromptIds.size,timedOut:e?.name==='AbortError'}));
    throw e;
  }finally{clearTimeout(timer);}
  const runs=await(await fetch(base+'/api/runs?agent=deepforge&limit=20',{headers})).json();
