@@ -20,10 +20,12 @@
   const shared = (typeof module !== 'undefined' && module.exports)
     ? require('../../shared/specialties.js')
     : (root.SharedSpecialties || {});
-  const api = factory(shared);
+  const roles = (typeof module !== 'undefined' && module.exports)
+    ? require('./eyehold-roles.js') : (root.EyeholdRoles || null);
+  const api = factory(shared, roles);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { root.Specialties = api; }
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (shared) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (shared, eyeholdRoles) {
   'use strict';
 
   const STORE_KEY = 'starnet.specialties.v1';   // localStorage home for custom (save-your-own) specialties
@@ -104,6 +106,12 @@
   // them (so an old save / a scout draft / a summon by id keeps working), the bay lists them only in the
   // SPECIALIST ARCHIVE, and the scout stages one as a prospect when the learned interests point at it.
   const ARCHETYPES = Object.freeze((shared.ARCHETYPES || []).map(freezeSpec));
+  // Real opt-in SPECIALTIES: deploy via the existing dossier/config path, never via room art.
+  // No kit/skills are granted merely by choosing an Eyehold role.
+  const EYEHOLD = Object.freeze(eyeholdRoles ? Object.keys(eyeholdRoles.ROLES).map(id => {
+    const role = eyeholdRoles.ROLES[id], docs = eyeholdRoles.compose(id);
+    return freezeSpec({id:'eyehold-'+id,name:role.name,emoji:'◆',tagline:'Eyehold faction specialist',purpose:docs.purpose,manual:docs.manual,model:id==='astral'?'reasoning':'balanced',tags:{general:1},kit:[],skills:[]});
+  }) : []);
 
   /* ---------- custom (save-your-own) specialties ---------- */
   let customs = [];   // plain (mutable) records with custom:true
@@ -150,8 +158,8 @@
   function archetypes() { return ARCHETYPES.slice(); }
   function customList() { return customs.map(c => Object.assign({}, c)); }   // copies — callers never hold a live ref
   // list() stays builtins+customs (the default roster surface); archive classes are asked for explicitly.
-  function list() { return BUILTINS.concat(customList()); }
-  function get(id) { return BUILTINS.find(b => b.id === id) || ARCHETYPES.find(a => a.id === id) || customs.find(c => c.id === id) || null; }
+  function list() { return BUILTINS.concat(EYEHOLD, customList()); }
+  function get(id) { return BUILTINS.find(b => b.id === id) || EYEHOLD.find(a => a.id === id) || ARCHETYPES.find(a => a.id === id) || customs.find(c => c.id === id) || null; }
   function exists(id) { return !!get(id); }
 
   // the EXACT patch App.applyAgentConfig consumes — the single deploy path (dossier edits use the same).
