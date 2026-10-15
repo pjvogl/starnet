@@ -259,6 +259,7 @@ const Updates = (() => {
   }
 
   async function install(opts) {
+    if (!EYEHOLD_UPDATES_ENABLED) return snapshot();
     opts = opts || {};
     if (!TAURI || !CORE || busy || !state.update) {
       notify('No StarNet update is ready to install', 'warn');
