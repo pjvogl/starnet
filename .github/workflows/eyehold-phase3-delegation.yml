@@ -1,0 +1,34 @@
+name: Eyehold Phase 3 - Delegation proof
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  delegation:
+    name: Real sidecar delegated worker proof (mock model, zero API charges)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Verify configured Deepforge specialty uses normal agent dossier
+        run: |
+          node test/eyehold-roles.test.js
+          node test/eyehold-specialty-integration.test.js
+      - name: Verify real sidecar can summon a worker through model-driven tool call
+        run: node test/e2e.summon.test.js
+      - name: Verify real sidecar dispatch, durable child run, session transcript and refusal
+        run: node test/e2e.dispatch-session.test.js
+      - name: Summarize exact scope
+        if: success()
+        run: |
+          echo "## Phase 3: Offline delegation PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "The actual sidecar executed model-driven summon/dispatch and persisted the delegated worker's run and transcript using a deterministic mock model." >> "$GITHUB_STEP_SUMMARY"
+          echo "Deepforge instruction templates were verified independently. This does NOT yet prove a live-provider Eye-to-Deepforge exchange, autonomous revenue, or Crown awards." >> "$GITHUB_STEP_SUMMARY"
