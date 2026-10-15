@@ -44,3 +44,8 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - Added `sidecar/eyehold-owner-review-http.js` with an opt-in POST handler. It requires **host-injected** `authorizeRequest(req)` and `inspectEvidence(decision,run,context)` before awarding Crowns, and never trusts an HTTP JSON `authenticated` or `actorType` claim.
 - Added offline test `test/eyehold-owner-review-http.test.js`, and included it in Phase 4 Crown workflow. The header in this test is a **mock only**, not a production authentication method.
 - This handler is **not yet mounted into the actual sidecar routing table**. Before mounting, inspect existing HTTP authorization guarantees and add server-owned evidence verification. Do not substitute the test stub for real auth.
+
+## Operator-visible productive workflow (2026-10-15)
+- Added `.github/workflows/eyehold-produce-deliverable.yml`: a manual assignment input is delegated through the previously proven real-model The Eye -> Deepforge path, and the worker text plus an **unapproved** review manifest are archived as a downloadable CI artifact. This is a move toward meaningful agent output, not yet a deployed application UI or commercial service.
+- Existing paid live execution budget/consent boundaries are retained; workflow has not yet been reported green. No Crowns, earnings, or production acceptance implied by artifact creation.
+- Next: prove this workflow with one useful assignment, then move its review and evidence controls into the authenticated running application (rather than adding isolated ledger tests). Commercial pilot only after bounded cost and review checks.
