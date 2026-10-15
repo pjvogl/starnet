@@ -92,6 +92,22 @@ jobs:
             output.runStarts=(work.starts||[]).length;
             output.runEnds=(work.ends||[]).map(e=>({reason:e.reason||'unknown'}));
             output.runErrors=(work.errors||[]).length;
+            // Capture narrowly scoped provider/run error hints; never publish raw
+            // request bodies, auth headers, transcript messages, or stack traces.
+            const classify=(x)=>{
+              const v=String(x||'').toLowerCase();
+              if(/\\b(401|403)\\b|unauthoriz|invalid.api.key|authentication/.test(v))return 'provider-auth';
+              if(/\\b402\\b|insufficient.credits|billing|quota|credit.balance/.test(v))return 'provider-billing';
+              if(/\\b429\\b|rate.limit/.test(v))return 'provider-rate-limit';
+              if(/model.not.found|unknown.model|\\b404\\b/.test(v))return 'model-unavailable';
+              if(/context.length|too.many.tokens/.test(v))return 'context-limit';
+              if(/fetch.failed|econn|enotfound|network|timeout/.test(v))return 'network';
+              if(/capability|permission.denied|not.allowed/.test(v))return 'permissions';
+              return 'unclassified';
+            };
+            output.errorCategories=[...new Set((work.errors||[]).map(e=>classify(JSON.stringify(e))))];
+            output.modelConfigured=!!r.model;
+            output.modelHint=r.model?String(r.model).replace(/[^a-zA-Z0-9/_:.-]/g,'').slice(0,90):null;
             output.costEvents=(work.costs||[]).length;
             output.toolCallCount=(work.toolCalls||[]).length;
             output.toolNames=[...new Set((work.toolCalls||[]).map(c=>c.name).filter(Boolean))];
