@@ -6587,6 +6587,22 @@ const World = (() => {
      loop runs it on the stage every frame; renderStill() runs it once on an offscreen canvas. Everything that
      belongs to the live stage alone (the backdrop, bloom, the curve, scanlines, the heartbeat pixel, the camera
      readout) is skipped for a still. */
+  function drawEyeholdOtherTerritories() {
+    if (typeof EyeholdEnvironments === 'undefined' || !station || !station.rooms || !geo || !geo.origin) return;
+    const tile = geo.TILE || T, ox = geo.origin.tx, oy = geo.origin.ty;
+    const viewX1 = (-panX / scale) - 24, viewY1 = (-panY / scale) - 24;
+    const viewX2 = ((cv.width-panX)/scale)+24, viewY2 = ((cv.height-panY)/scale)+24;
+    for (const room of station.rooms()) {
+      if (!room || room.kind === 'corridor' || !EyeholdEnvironments.isEnvironment(room.eyeTerritory)) continue;
+      for (const r of room.rects || []) {
+        const x=(r.x1-ox)*tile,y=(r.y1-oy)*tile;
+        const w=(r.x2-r.x1+1)*tile,h=(r.y2-r.y1+1)*tile;
+        if(x+w<viewX1||y+h<viewY1||x>viewX2||y>viewY2)continue;
+        EyeholdEnvironments.draw(ctx,room.eyeTerritory,{x,y,w,h},tile);
+      }
+    }
+  }
+
   function drawEyeholdKeepFloor() {
     if (typeof EyeholdTerritories === 'undefined' || !station.rooms || !geo.origin) return;
     const tile = geo.TILE || T, ox = geo.origin.tx, oy = geo.origin.ty;
@@ -6684,7 +6700,10 @@ const World = (() => {
     // EYEHOLD — first original environment layer. This draws only a decorative
     // tapestry/sigil *inside* rooms assigned to the Keep, under props and agents.
     // It never changes world geometry, pathing, tool permissions, or live status.
-    if (station && geo && geo.origin) drawEyeholdKeepFloor();
+    if (station && geo && geo.origin) {
+      drawEyeholdKeepFloor();
+      drawEyeholdOtherTerritories();
+    }
 
     // conveyor belts (floor machinery) + the live transport sim — local frame, under entities
     if (geo && geo.belts && typeof Conveyor !== 'undefined') {
