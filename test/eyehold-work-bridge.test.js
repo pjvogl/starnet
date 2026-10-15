@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('nod
 const {createBridge}=require('../sidecar/eyehold-work-bridge.js');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'eye-bridge-'));
 let status='running';
-const acceptance={accepted:true,taskId:'t1',deliverableId:'d1',runId:'run1',verificationMethod:'user',evidenceRefs:['artifact1'],contributors:['agent1'],acceptanceRevision:1,predeclaredComplexity:1,quality:5,testPassed:true};
+const acceptance={accepted:true,goalId:'profit-1m',goalAdvanced:true,goalEvidenceRef:'accepted-artifact-1',taskId:'t1',deliverableId:'d1',runId:'run1',verificationMethod:'user',evidenceRefs:['artifact1'],contributors:['agent1'],acceptanceRevision:1,predeclaredComplexity:1,quality:5,testPassed:true};
 try{
 const make=()=>createBridge({file:path.join(dir,'ledger.json'),getRun:id=>({id,taskId:'t1',agentId:'agent1',status}),getAcceptance:()=>acceptance,getHistory:()=>[{verified:true,outcome:'failed'},{verified:true,outcome:'failed'},{verified:true,outcome:'failed'}]});
 let bridge=make();
