@@ -7723,7 +7723,14 @@ const World = (() => {
       if (bornA < 1) ctx.globalAlpha = prevA * bornA;
       let geom = null;
       const bodyLight = sceneRenderer && sceneRenderer.sampleLight(who.px, who.py);
-      if (typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
+      // The original Eyehold overseer renders through the same agent draw pass.
+      // Preserve normal sprites in every other room and for every worker.
+      const ownRoom = who === agent && station && station.agentRoomId
+        ? station.roomById(station.agentRoomId(who.id || 'agent')) : null;
+      const eyeSprite = who === agent && ownRoom && ownRoom.eyeTerritory === 'keep'
+        && typeof EyeholdSprites !== 'undefined';
+      if (eyeSprite) geom = EyeholdSprites.draw(ctx, who, now);
+      if (!eyeSprite && typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
         bodyLight ? { reducedMotion: reduceMotion(), light: bodyLight,
           skipGroundShadow: !who.seated && !who.lying } : undefined);
       // Do not flash the cyan procedural body while the real default skin is actively loading.
