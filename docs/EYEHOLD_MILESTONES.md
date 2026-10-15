@@ -39,3 +39,8 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - Host bootstrap was reported green; `sidecar/index.js` now has a different blob SHA from the earlier read, consistent with an installation commit. The live evidence callback remains intentionally `verifyEvidence: () => false`.
 - Added `sidecar/eyehold-review-gate.js` and `test/eyehold-review-gate.test.js`: authenticated operator identity, matching run/goal/evidence and independent evidence inspection are all required. CI workflow updated; green result not yet confirmed.
 - **Still pending:** bind operator identity to a real authenticated sidecar request/session, expose an owner-only review action, and invoke acceptance within the single sidecar writer. Do not expose unrestricted approval or treat simulated auth test as production authentication.
+
+## Owner HTTP review boundary (next integration stage)
+- Added `sidecar/eyehold-owner-review-http.js` with an opt-in POST handler. It requires **host-injected** `authorizeRequest(req)` and `inspectEvidence(decision,run,context)` before awarding Crowns, and never trusts an HTTP JSON `authenticated` or `actorType` claim.
+- Added offline test `test/eyehold-owner-review-http.test.js`, and included it in Phase 4 Crown workflow. The header in this test is a **mock only**, not a production authentication method.
+- This handler is **not yet mounted into the actual sidecar routing table**. Before mounting, inspect existing HTTP authorization guarantees and add server-owned evidence verification. Do not substitute the test stub for real auth.
