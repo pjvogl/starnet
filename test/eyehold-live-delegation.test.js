@@ -57,8 +57,20 @@ async function run(){
  }finally{clearTimeout(timer);}
  const runs=await(await fetch(base+'/api/runs?agent=deepforge&limit=20',{headers})).json();
  const children=(runs.runs||[]).filter(r=>r.agentId==='deepforge');
- const success=children.some(r=>r.runId&&r.deliveryText&&String(r.deliveryText).length>20);
- const summary={leadStart:events.some(e=>e.name==='agent.run.start'),leadEnd:events.filter(e=>e.name==='agent.run.end').map(e=>e.payload?.reason),deepforgeRunCount:children.length,deepforgeDeliverableVerified:success,stationCommands:station.filter(x=>x&&x.startsWith('station.')).length,model};
+ const details=[];
+ for(const worker of children){
+   let transcriptText='';
+   if(worker.streamId){
+     const tr=await fetch(base+'/api/transcript?agent=deepforge&stream='+encodeURIComponent(worker.streamId)+'&limit=80',{headers});
+     if(tr.ok){
+       const payload=await tr.json();
+       transcriptText=(payload.turns||[]).filter(t=>t.role==='assistant').map(t=>typeof t.content==='string'?t.content:'').join(' ').trim();
+     }
+   }
+   details.push({runId:worker.runId,delegatedBy:worker.delegatedBy,streamIdPresent:!!worker.streamId,deliveryTextLength:String(worker.deliveryText||'').length,transcriptTextLength:transcriptText.length,reason:worker.reason||worker.status||null,outputVerified:!!worker.runId&&worker.delegatedBy==='agent'&&(String(worker.deliveryText||'').length>20||transcriptText.length>20)});
+ }
+ const success=details.some(d=>d.outputVerified);
+ const summary={leadStart:events.some(e=>e.name==='agent.run.start'),leadEnd:events.filter(e=>e.name==='agent.run.end').map(e=>e.payload?.reason),deepforgeRunCount:children.length,deepforgeDeliverableVerified:success,deepforgeEvidence:details,stationCommands:station.filter(x=>x&&x.startsWith('station.')).length,model};
  console.log(JSON.stringify(summary,null,2));
  if(!success)throw Error('Live Deepforge child-run deliverable not established');
 }
