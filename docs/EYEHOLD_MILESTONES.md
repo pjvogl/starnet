@@ -28,3 +28,9 @@ Never report a new phase as completed based solely on committed code. Phase 4's 
 
 ## Production wiring mapping
 The operator reported the composed Crown runtime CI green. `sidecar/index.js` is too large for the connected file reader to return its source; `.github/workflows/eyehold-phase4-integration-mapping.yml` prints bounded run/event API interface excerpts in a GitHub job summary. Review this evidence before editing live startup, and do not award Crowns simply because a run ended.
+
+## October 15 production bootstrap attempt
+- Mapped real `runStore` and channel/event integration points from production code excerpt. `runStore` uses `runId` + `reason`; added `sidecar/eyehold-runstore-adapter.js` to map them into the strict Crown verification contract.
+- Added guarded bootstrap installer `scripts/eyehold-install-host-wiring.cjs` and `.github/workflows/eyehold-phase4-install-host.yml`, which can commit `sidecar/index.js` only after syntax and offline tests pass. The workflow was configured to trigger by a branch push.
+- **Security:** bootstrap deliberately uses `verifyEvidence: () => false`. This installs infrastructure but will not award production Crowns until a separate reviewer-authorized business-evidence verification mechanism is implemented and tested. No automatic real financial success is claimed.
+- Confirm workflow success and resulting host commit before changing the production-host milestone status.
