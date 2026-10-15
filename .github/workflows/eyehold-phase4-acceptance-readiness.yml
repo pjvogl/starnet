@@ -30,6 +30,7 @@ jobs:
             '\nThis is a static source check, not proof of wired live acceptance.\n');
           console.log(JSON.stringify(checks));
           if(!checks.crownIntegrationImported||!checks.acceptedEventEmitted||!checks.acceptanceStoreMentioned){
-            console.log('Integration contract incomplete; not claiming production Crown awards.');
+            console.error('Production acceptance wiring is not yet installed: contract check intentionally fails.');
+            process.exitCode=1;
           }
           NODE
