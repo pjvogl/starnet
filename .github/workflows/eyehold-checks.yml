@@ -9,6 +9,8 @@ on:
       - 'frontend/app/worldmodel.js'
       - 'test/eyehold-*.test.js'
       - '.github/workflows/eyehold-checks.yml'
+      - 'scripts/qa/eyehold-release-drift.cjs'
+      - 'qa/product-perfect/claims.json'
   pull_request:
     paths:
       - 'sidecar/eyehold-*.js'
@@ -47,3 +49,27 @@ jobs:
             node "$file"
             echo "::endgroup::"
           done
+
+  release-drift-report:
+    name: Read-only release drift report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inventory modified protected release surface
+        shell: bash
+        run: |
+          mkdir -p eyehold-audit
+          node scripts/qa/eyehold-release-drift.cjs > eyehold-audit/release-drift.md
+          node scripts/qa/eyehold-release-drift.cjs --json > eyehold-audit/release-drift.json
+          cat eyehold-audit/release-drift.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Attach review report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-release-drift
+          path: eyehold-audit/
