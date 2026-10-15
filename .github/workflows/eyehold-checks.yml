@@ -11,6 +11,7 @@ on:
       - '.github/workflows/eyehold-checks.yml'
       - 'scripts/qa/eyehold-release-drift.cjs'
       - 'qa/product-perfect/claims.json'
+      - 'src-tauri/tauri.conf.json'
   pull_request:
     paths:
       - 'sidecar/eyehold-*.js'
