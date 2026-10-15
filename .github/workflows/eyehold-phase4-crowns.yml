@@ -32,6 +32,7 @@ jobs:
           node --check sidecar/eyehold-acceptance-store.js
           node --check sidecar/eyehold-crown-runtime.js
           node --check sidecar/eyehold-review-gate.js
+          node --check sidecar/eyehold-owner-review-runtime.js
       - name: Verify goal-only Crown scoring and replay prevention
         run: |
           node test/eyehold-productivity.test.js
@@ -44,6 +45,7 @@ jobs:
           node test/eyehold-acceptance-store.test.js
           node test/eyehold-crown-runtime.test.js
           node test/eyehold-review-gate.test.js
+          node test/eyehold-owner-review-runtime.test.js
       - name: Publish honest validation scope
         if: success()
         run: |
