@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const cfg=JSON.parse(fs.readFileSync(path.join(root,'src-tauri/tauri.conf.json'),'utf8'));
+assert.equal(cfg.productName,'The Eyehold');
+assert.notEqual(cfg.bundle.publisher,'Andrew Sims');
+assert.equal(cfg.bundle.createUpdaterArtifacts,false);
+assert.deepEqual(cfg.plugins.updater.endpoints,[]);
+const ui=fs.readFileSync(path.join(root,'frontend/app/updates.js'),'utf8');
+assert.doesNotMatch(ui,/androoAGI\/starnet-releases/);
+assert.match(ui,/EYEHOLD_UPDATES_ENABLED = false/);
+console.log('Eyehold publisher and updater branding safeguards OK');
