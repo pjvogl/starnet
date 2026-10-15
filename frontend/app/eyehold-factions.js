@@ -1,0 +1,34 @@
+/* Eyehold: six original faction worker sprites (16x18 pixel grids).
+ * Purely cosmetic; the real agent's position and activity continue to drive the world.
+ */
+'use strict';
+(function(root,factory){const api=factory();if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.EyeholdFactions=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const sprites={
+  foundry:{palette:{A:'#48543a',B:'#89946a',C:'#282b30',D:'#8a4f32',E:'#cd8c51'},rows:[
+'.....CCCC......','....CDDDCC.....','...CCDDDCCC....','...CAAAACCC....','..CCABBAACCC...','..CAAEEAACCC...','...CCAAACCC....','..DDCCCCCDDD...','..DDCCCCCDDD...','..CCCCCCCCCC...','..CCDDCCDDCC...','...DDDCCDDD....','...CCCCCCCC....','...CCC..CCC....','..CCCC..CCCC...','..CCC....CCC...','..CCC....CCC...','................']},
+  moonleaf:{palette:{A:'#d1c5ab',B:'#b2d9bb',C:'#477564',D:'#e5e2ce',E:'#7d8fba'},rows:[
+'.....CCCCC......','....CCCCC......','...CCAAAAAC....','..CCCCAAAACC...','..CCADDAADCC...','..CCAAAAACCC...','...CCCCCACC....','...BBBBBBBB....','..BBBBEBBBBB...','..BBBBBBBBBB...','...BBBBBBBB....','...BBCBBCBB....','...CCCBBCCC....','...CCC..CCC....','...CCC..CCC....','...CCC..CCC....','..DDDD..DDDD...','................']},
+  forge:{palette:{A:'#c38b61',B:'#704e3b',C:'#363842',D:'#a98c57',E:'#f2c56d'},rows:[
+'....CCCCCCC.....','...CCDDDDCC.....','...CAAAAACC.....','..CCAEEAACCC....','..CAAABBBAAC....','..CAAABBBAAC....','...CBBBBBBC.....','..CCCCCCCCCC....','..CDDDCCCCDD....','..CDDDCCCCDD....','..CCCCCCCCCC....','...CCDDDDCC.....','...CCCCCCCC.....','..CCCC..CCCC....','..CCCC..CCCC....','..CCCC..CCCC....','...DDD..DDD.....','................']},
+  archive:{palette:{A:'#d3bda4',B:'#313649',C:'#5a6382',D:'#8c87a4',E:'#d4c6a1'},rows:[
+'.....BBBBB......','....BBBBBBB.....','...BBBBBBBBB....','...BBAAAABBB....','...BAEEAABBB....','....BAAAABB.....','....BBBBBB......','...BBCCCCBB.....','..BBBCCCCBBB....','..BBCCCCCCBB....','...BCCCCCCB.....','...BCCDDCCB.....','..BBCCCCCCBB....','..BBBC..CBBB....','..BBBC..CBBB....','..BBBC..CBBB....','..DDD....DDD....','................']},
+  roost:{palette:{A:'#b78a69',B:'#6b4d42',C:'#b9a078',D:'#393642',E:'#e8ca97'},rows:[
+'.....BBBBB......','....BBCCCBB.....','....BAAAABB.....','...BBAEEAABB....','...BBAAAABB.....','....BBBBBB......','...BCCCCCCB.....','..BBCCCCCCBB....','..BBCCDDCCBB....','..BBCCDDCCBB....','...BCCCCCCB.....','...BCCCCCCB.....','...BBBBBBBB.....','...BBB..BBB.....','..BBBB..BBBB....','..BBBB..BBBB....','...CCC..CCC.....','................']},
+  astral:{palette:{A:'#c8b9ae',B:'#373a66',C:'#746bac',D:'#d1b6eb',E:'#f2cc89'},rows:[
+'......BBBB......','.....BBBBBB.....','....BBCCCCBB....','....BAAAAABB....','....BAEEAABB....','.....BAAABB.....','.....BBBBBB.....','....BCCCCCBB....','...BBCCDDCCBB...','..BBCCCDCCCBB...','...BBCCCCCCB....','....BCCCCCBB....','....BBCCCCBB....','....BBCCBB......','....BB..BB......','...BBB..BBB.....','...DD....DD.....','................']}
+};
+const validate=rec=>!!rec&&rec.rows.length===18&&rec.rows.every(row=>row.length===16&&[...row].every(c=>c==='.'||Object.prototype.hasOwnProperty.call(rec.palette,c)));
+function draw(ctx,body,now,environment){
+ const rec=Object.prototype.hasOwnProperty.call(sprites,environment)?sprites[environment]:null;
+ if(!ctx||!body||!rec||!Number.isFinite(body.px)||!Number.isFinite(body.py))return null;
+ const x=Math.round(body.px)-8,y=Math.round(body.py)-17;
+ // Cosmetic animation reflects the body's motion; no fabricated progress/activity.
+ const moving=!!(body.path&&body.path.length)||!!body.walking;
+ const bob=moving?Math.round(Math.sin(now/130)):0;
+ ctx.save();ctx.imageSmoothingEnabled=false;
+ for(let iy=0;iy<18;iy++)for(let ix=0;ix<16;ix++){const c=rec.rows[iy][ix];if(c==='.')continue;ctx.fillStyle=rec.palette[c];ctx.fillRect(x+ix,y+iy+bob,1,1);}
+ ctx.restore();return {top:y+bob};
+}
+return Object.freeze({sprites,validate,draw});
+});
