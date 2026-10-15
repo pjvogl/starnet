@@ -18,6 +18,8 @@ const sprites={
   astral:{palette:{A:'#c8b9ae',B:'#373a66',C:'#746bac',D:'#d1b6eb',E:'#f2cc89'},rows:[
 '......BBBB......','.....BBBBBB.....','....BBCCCCBB....','....BAAAAABB....','....BAEEAABB....','.....BAAABB.....','.....BBBBBB.....','....BCCCCCBB....','...BBCCDDCCBB...','..BBCCCDCCCBB...','...BBCCCCCCB....','....BCCCCCBB....','....BBCCCCBB....','....BBCCBB......','....BB..BB......','...BBB..BBB.....','...DD....DD.....','................']}
 };
+// Normalize authored grids so deliberate empty margins cannot truncate a silhouette.
+for(const rec of Object.values(sprites))rec.rows=rec.rows.map(row=>row.padEnd(16,'.'));
 const validate=rec=>!!rec&&rec.rows.length===18&&rec.rows.every(row=>row.length===16&&[...row].every(c=>c==='.'||Object.prototype.hasOwnProperty.call(rec.palette,c)));
 function draw(ctx,body,now,environment){
  const rec=Object.prototype.hasOwnProperty.call(sprites,environment)?sprites[environment]:null;
