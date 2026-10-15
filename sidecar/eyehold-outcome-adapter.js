@@ -28,6 +28,23 @@ function createOutcomeAdapter({file,getRun,getAcceptance,getHistory,getAgentIds,
  function supervisor(){
   return snapshot({ledger:bridge,agentIds:getAgentIds(),getHistory,now:now()});
  }
- return Object.freeze({acceptedHint,runEndedHint,supervisor,totals:bridge.totals});
+ // Plug into an existing *trusted sidecar* event emitter using an explicit
+ // acceptance event. run.end only checks status; never triggers a credit.
+ function subscribe(emitter){
+  if(!emitter||typeof emitter.on!=='function'||typeof emitter.removeListener!=='function')
+   throw new TypeError('trusted Node event emitter required');
+  const onAccepted=e=>{try{acceptedHint(e);}catch(err){if(typeof emitter.emit==='function')emitter.emit('eyehold.productivity.error',err);}};
+  const onEnded=e=>{try{runEndedHint(e);}catch(err){if(typeof emitter.emit==='function')emitter.emit('eyehold.productivity.error',err);}};
+  emitter.on('deliverable.accepted',onAccepted);
+  emitter.on('run.end',onEnded);
+  let active=true;
+  return function unsubscribe(){
+   if(!active)return;
+   active=false;
+   emitter.removeListener('deliverable.accepted',onAccepted);
+   emitter.removeListener('run.end',onEnded);
+  };
+ }
+ return Object.freeze({acceptedHint,runEndedHint,subscribe,supervisor,totals:bridge.totals});
 }
 module.exports=Object.freeze({createOutcomeAdapter});
