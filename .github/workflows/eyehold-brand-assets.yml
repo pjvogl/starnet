@@ -1,0 +1,40 @@
+name: Eyehold original brand asset build
+
+on:
+  push:
+    branches: [feat/harness-backend]
+    paths:
+      - 'scripts/eyehold/generate_brand_assets.py'
+      - '.github/workflows/eyehold-brand-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Eyehold original installer assets
+        run: python3 scripts/eyehold/generate_brand_assets.py --output eyehold-brand-preview
+      - name: Validate output signatures and sizes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('eyehold-brand-preview')
+          expected=['icons/32x32.png','icons/128x128.png','icons/128x128@2x.png','icons/icon.ico','icons/icon.icns','installer/header.bmp','installer/sidebar.bmp','installer/dmg-background.png']
+          for p in expected:
+              data=(root/p).read_bytes()
+              assert len(data)>100,p
+              if p.endswith('.png'): assert data.startswith(b'\x89PNG\r\n\x1a\n'),p
+              if p.endswith('.bmp'): assert data.startswith(b'BM'),p
+              if p.endswith('.ico'): assert data.startswith(b'\x00\x00\x01\x00'),p
+              if p.endswith('.icns'): assert data.startswith(b'icns'),p
+              print(p,len(data),'bytes')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-original-brand-assets
+          path: eyehold-brand-preview/
