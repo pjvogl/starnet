@@ -6602,6 +6602,34 @@ const World = (() => {
         if (w < 36 || h < 36) continue;
         const cx = x + w / 2, cy = y + h / 2;
         ctx.save();
+        // Original dark-fantasy inlaid basalt tilework. Drawn as a translucent
+        // underlay so underlying walkable tiles, machinery, and agents remain legible.
+        const inset = 24, left = x + inset, top = y + inset;
+        const right = x + w - inset, bottom = y + h - inset;
+        ctx.fillStyle = 'rgba(24,19,26,0.32)';
+        ctx.fillRect(left, top, Math.max(0,right-left), Math.max(0,bottom-top));
+        ctx.strokeStyle = 'rgba(176,111,61,0.18)'; ctx.lineWidth = 1;
+        const stride = 2 * tile;
+        for (let px = left + stride; px < right; px += stride) {
+          ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
+        }
+        for (let py = top + stride; py < bottom; py += stride) {
+          ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
+        }
+        // The central processional runner is decorative, never an obstacle.
+        const rw = Math.min(22, w * 0.12), rh = Math.min(h * 0.28, 58);
+        ctx.fillStyle = 'rgba(105,45,37,0.58)';
+        ctx.fillRect(cx-rw/2, cy-rh, rw, rh*2);
+        ctx.strokeStyle = 'rgba(228,151,78,0.65)';
+        ctx.strokeRect(cx-rw/2,cy-rh,rw,rh*2);
+        // Four recessed ember-medallions occupy the inner corners, without
+        // drawing over doorway edges or changing collision/pathfinding.
+        for (const dx of [-1,1]) for (const dy of [-1,1]) {
+          const px=cx+dx*Math.min(w*0.3,72), py=cy+dy*Math.min(h*0.28,49);
+          ctx.fillStyle='rgba(16,13,18,0.7)';ctx.fillRect(px-5,py-5,10,10);
+          ctx.fillStyle='#a65b36';ctx.fillRect(px-3,py-3,6,6);
+          ctx.fillStyle='#f3ba71';ctx.fillRect(px-1,py-1,2,2);
+        }
         // Ember-inlaid floor border: inset so it does not disguise doors or walls.
         ctx.strokeStyle = 'rgba(199,109,48,0.54)'; ctx.lineWidth = 2;
         ctx.strokeRect(x + 17, y + 17, w - 34, h - 34);
