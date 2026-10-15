@@ -1,0 +1,54 @@
+name: Eyehold - Produce a real deliverable
+
+on:
+  workflow_dispatch:
+    inputs:
+      assignment:
+        description: 'One bounded engineering, research, or documentation assignment for The Eye to delegate'
+        required: true
+        type: string
+        default: 'Write a concise one-page checklist for testing a Node.js service release, including security and rollback criteria.'
+
+permissions:
+  contents: read
+
+jobs:
+  deliverable:
+    name: The Eye delegates to Deepforge (real model, capped)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SKYNET_OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      EYEHOLD_DELEGATION_MODEL: ${{ vars.EYEHOLD_DELEGATION_MODEL }}
+      EYEHOLD_ASSIGNMENT: ${{ inputs.assignment }}
+      EYEHOLD_DELIVERABLE_DIR: ${{ github.workspace }}/eyehold-review
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Verify actual runtime and controlled assignment
+        run: |
+          test -n "$SKYNET_OPENROUTER_KEY" || { echo "::error::OPENROUTER_API_KEY secret missing"; exit 1; }
+          node --check test/eyehold-live-delegation.test.js
+      - name: The Eye dispatches real work to Deepforge
+        timeout-minutes: 5
+        run: node test/eyehold-live-delegation.test.js
+      - name: Require a captured human-reviewable artifact
+        run: |
+          test -s eyehold-review/deepforge-deliverable.md
+          node -e "const m=require('./eyehold-review/review-manifest.json');if(m.approved!==false||m.earnedCrowns!==0||m.delegatedBy!=='agent')process.exit(1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-real-deliverable-for-review
+          path: eyehold-review/
+          retention-days: 3
+          if-no-files-found: error
+      - name: Explain outcome
+        run: |
+          echo '## A real Deepforge deliverable is ready for human review' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Download artifact: eyehold-real-deliverable-for-review' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This is **unreviewed output**, not an accepted product or earned revenue. No Crowns are awarded automatically.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Cost controls are inherited from the existing Phase 3 live delegation proof; provider charges may apply.' >> "$GITHUB_STEP_SUMMARY"
