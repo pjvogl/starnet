@@ -21,16 +21,40 @@ const sprites={
 // Normalize authored grids so deliberate empty margins cannot truncate a silhouette.
 for(const rec of Object.values(sprites))rec.rows=rec.rows.map(row=>row.padEnd(16,'.'));
 const validate=rec=>!!rec&&rec.rows.length===18&&rec.rows.every(row=>row.length===16&&[...row].every(c=>c==='.'||Object.prototype.hasOwnProperty.call(rec.palette,c)));
+function pose(body, now) {
+ const walking = !!(body && (body.walking || (Array.isArray(body.path) && body.path.length>0)));
+ // The world supplies 'activity' and seated posture from its real agent state.
+ const working = !walking && !!(body && (body.sitting || body.seated || body.activity === 'task'));
+ return {walking,working,phase:Math.floor(Math.max(0,Number(now)||0)/160)%4};
+}
 function draw(ctx,body,now,environment){
  const rec=Object.prototype.hasOwnProperty.call(sprites,environment)?sprites[environment]:null;
  if(!ctx||!body||!rec||!Number.isFinite(body.px)||!Number.isFinite(body.py))return null;
+ const p=pose(body,now);
  const x=Math.round(body.px)-8,y=Math.round(body.py)-17;
- // Cosmetic animation reflects the body's motion; no fabricated progress/activity.
- const moving=!!(body.path&&body.path.length)||!!body.walking;
- const bob=moving?Math.round(Math.sin(now/130)):0;
+ const bob=p.walking&&p.phase%2===1?-1:0;
  ctx.save();ctx.imageSmoothingEnabled=false;
- for(let iy=0;iy<18;iy++)for(let ix=0;ix<16;ix++){const c=rec.rows[iy][ix];if(c==='.')continue;ctx.fillStyle=rec.palette[c];ctx.fillRect(x+ix,y+iy+bob,1,1);}
+ for(let iy=0;iy<18;iy++)for(let ix=0;ix<16;ix++){
+   const c=rec.rows[iy][ix];if(c==='.')continue;
+   let xx=ix,yy=iy+bob;
+   // Alternating legs only while the agent actually travels.
+   if(p.walking&&iy>=13){if(ix<=7)yy+=p.phase%2;else yy+=(p.phase+1)%2;}
+   // Subtle raised hand while seated/working, without covering status overlays.
+   if(p.working&&iy>=7&&iy<=10&&ix<=3)xx+=p.phase%2;
+   ctx.fillStyle=rec.palette[c];ctx.fillRect(x+xx,y+yy,1,1);
+ }
+ // Readable faction-specific tools appear only for agents with a work posture.
+ if(p.working){
+   const tip=p.phase%2;
+   ctx.fillStyle=rec.palette.E||'#e5bf7e';
+   if(environment==='forge'){ctx.fillRect(x+13,y+9-tip,2,7);ctx.fillRect(x+11,y+9-tip,5,2);}
+   else if(environment==='archive'||environment==='moonleaf'){ctx.fillRect(x+12,y+10,4,5);ctx.fillRect(x+13,y+11,2,3);}
+   else if(environment==='foundry'){ctx.fillRect(x+13,y+9-tip,2,6);ctx.fillRect(x+11,y+9-tip,5,2);}
+   else if(environment==='roost'){ctx.fillRect(x+11,y+11,5,3);ctx.fillRect(x+12,y+10,3,1);}
+   else if(environment==='astral'){ctx.fillRect(x+13,y+8-tip,2,7);ctx.fillRect(x+12,y+7-tip,4,2);}
+ }
  ctx.restore();return {top:y+bob};
 }
-return Object.freeze({sprites,validate,draw});
+
+return Object.freeze({sprites,validate,pose,draw});
 });
