@@ -1,0 +1,16 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {makeReviewGate}=require('../sidecar/eyehold-review-gate.js');
+const proof={runId:'run1',taskId:'run1',goalId:'profit-1m',goalAdvanced:true,goalEvidenceRef:'proof1',evidenceRefs:['proof1']};
+const run={id:'run1',taskId:'run1',agentId:'deepforge',status:'completed'};
+const gate=makeReviewGate({authenticateOperator:ctx=>ctx.operatorId==='owner',inspectEvidence:(decision,record,ctx)=>ctx.independentArtifactVerified===true});
+const owner={actorType:'operator',authenticated:true,operatorId:'owner',reviewedRunId:'run1',reviewedGoalId:'profit-1m',reviewedEvidenceRef:'proof1',independentArtifactVerified:true};
+assert.equal(gate.verify(proof,run,owner),true);
+assert.equal(gate.verify(proof,run,{...owner,actorType:'agent'}),false);
+assert.equal(gate.verify(proof,run,{...owner,operatorId:'deepforge'}),false);
+assert.equal(gate.verify(proof,run,{...owner,independentArtifactVerified:false}),false);
+assert.equal(gate.verify(proof,run,{...owner,reviewedRunId:'other'}),false);
+assert.equal(gate.verify({...proof,goalAdvanced:false},run,owner),false);
+assert.equal(gate.verify({...proof,goalEvidenceRef:'forged'},run,owner),false);
+assert.throws(()=>makeReviewGate({}),/trusted operator/);
+console.log('Eyehold owner authorization + independent evidence gate OK');
