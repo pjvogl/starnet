@@ -58,6 +58,19 @@ jobs:
             echo "::error::Repository secret OPENROUTER_API_KEY not configured. No live run attempted."
             exit 1
           fi
+      - name: Install Chromium browser for live UI workload
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
+          CHROME="$(command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME" ]; then
+            echo "::error::No Chromium binary after installation."
+            exit 1
+          fi
+          echo "SKYNET_CHROME=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
       - name: Run existing live workload proof (real provider billing possible)
         run: node scripts/phase5-live-workload-proof.mjs
       - name: Clarify proof scope
