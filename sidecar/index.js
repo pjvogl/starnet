@@ -1365,6 +1365,23 @@ const runsIo = {
 // anything stronger than not_assessed.
 const completionAuthority = Symbol('host completion assessment');
 const runStore = makeRunStore({ io: runsIo, clock: { now: () => Date.now() }, completionAuthority });
+/* EYEHOLD_TRUSTED_CROWN_RUNTIME_START */
+/* The real run ledger is authoritative. Crown awards stay blocked until a
+ * separately authorized reviewer validates an actual business milestone. */
+const eyeholdCrownEvents = new (require('node:events').EventEmitter)();
+const eyeholdReadRun = require('./eyehold-runstore-adapter.js').makeEyeholdRunReader(runStore);
+const eyeholdCrownRuntime = require('./eyehold-crown-runtime.js').createCrownRuntime({
+  workspaceDir: WORKSPACES,
+  events: eyeholdCrownEvents,
+  getRun: eyeholdReadRun,
+  // Fail closed: no agent or local API request can invent economic progress.
+  verifyEvidence: () => false,
+  getHistory: () => [],
+  getAgentIds: () => Array.from(new Set((runStore.all() || []).map(r => r.agentId).filter(Boolean))),
+  now: () => Date.now()
+});
+/* EYEHOLD_TRUSTED_CROWN_RUNTIME_END */
+
 
 // Explicit Commander work verdicts are durable facts, separate from the mutable browser save projection.
 // Append+fsync must fail closed: the UI may only say "rated" after this ledger acknowledges the row.
