@@ -1,0 +1,36 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {EventEmitter}=require('node:events');
+const {openAcceptanceStore}=require('../sidecar/eyehold-acceptance-store.js');
+const {installCrownIntegration}=require('../sidecar/eyehold-crown-integration.js');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'eye-accept-'));
+const emitter=new EventEmitter(),run={id:'runA',agentId:'deepforge',taskId:'taskA',status:'running'};
+const evidence=new Set();
+const candidate={taskId:'taskA',deliverableId:'deliveryA',runId:'runA',goalId:'profit-1m',goalAdvanced:true,goalEvidenceRef:'proofA',evidenceRefs:['proofA'],verificationMethod:'objective-test',contributors:['deepforge'],quality:5,testPassed:true,predeclaredComplexity:1};
+const storeOptions={file:path.join(root,'accept.json'),getRun:id=>id==='runA'?run:null,verifyEvidence:c=>evidence.has(c.goalEvidenceRef),events:emitter};
+const integrationOptions={workspaceDir:root,events:emitter,runs:{get:id=>id==='runA'?run:null},acceptances:{get:(t,d)=>store.get(t,d)},history:{forAgent:()=>[{agentId:'deepforge',verified:true,outcome:'accepted'}]},agentIds:()=>['deepforge'],now:()=>1000};
+let store;
+try{
+ store=openAcceptanceStore(storeOptions);
+ let integration=installCrownIntegration(integrationOptions);
+ assert.equal(store.accept(candidate).ok,false,'running run cannot be accepted');
+ assert.equal(integration.totals().deepforge,undefined);
+ run.status='completed';
+ assert.equal(store.accept(candidate).ok,false,'unverified evidence cannot be accepted');
+ assert.equal(integration.totals().deepforge,undefined);
+ evidence.add('proofA');
+ assert.equal(store.accept({...candidate,goalAdvanced:false}).ok,false,'goal-less work is rejected');
+ assert.equal(store.accept(candidate).accepted,true,'verified goal-aligned completion accepted');
+ assert.equal(integration.totals().deepforge,25,'event caused one Crown award');
+ assert.equal(store.accept(candidate).ok,false,'cannot reaccept same evidence');
+ assert.equal(integration.totals().deepforge,25);
+ integration.close();
+ store=openAcceptanceStore(storeOptions);
+ integration=installCrownIntegration(integrationOptions);
+ assert.equal(store.get('taskA','deliveryA').accepted,true);
+ assert.equal(integration.totals().deepforge,25,'restart preserves Crown');
+ emitter.emit('deliverable.accepted',{taskId:'taskA',deliverableId:'deliveryA'});
+ assert.equal(integration.totals().deepforge,25,'replay blocked');
+ integration.close();
+ console.log('Verified acceptance store -> trusted event -> durable Crowns end-to-end module proof OK');
+}finally{fs.rmSync(root,{recursive:true,force:true});}
