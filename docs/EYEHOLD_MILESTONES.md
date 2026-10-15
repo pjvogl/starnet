@@ -49,3 +49,8 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - Added `.github/workflows/eyehold-produce-deliverable.yml`: a manual assignment input is delegated through the previously proven real-model The Eye -> Deepforge path, and the worker text plus an **unapproved** review manifest are archived as a downloadable CI artifact. This is a move toward meaningful agent output, not yet a deployed application UI or commercial service.
 - Existing paid live execution budget/consent boundaries are retained; workflow has not yet been reported green. No Crowns, earnings, or production acceptance implied by artifact creation.
 - Next: prove this workflow with one useful assignment, then move its review and evidence controls into the authenticated running application (rather than adding isolated ledger tests). Commercial pilot only after bounded cost and review checks.
+
+## First real deliverable verified by operator (2026-10-15)
+- Operator reported `Eyehold - Produce a real deliverable` green following JSON export fix. The CI produced a real delegated worker artifact; this does **not** imply it was inspected or accepted.
+- Added a deterministic review packet generator (`scripts/eyehold-review-packet.cjs`) to the live deliverable workflow: `REVIEW_ME.md` human checklist, `quality-check.json` structural checks and SHA-256 digest. Added offline test `test/eyehold-review-packet.test.js`; the amended workflow still awaits confirmation.
+- Next functional step: review the actual file with the owner; then connect an authenticated review action in the live Eyehold app. A GitHub artifact and offline review checklist are not a game UI, and do not create earned Crowns or revenue.
