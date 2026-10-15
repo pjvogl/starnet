@@ -7772,12 +7772,18 @@ const World = (() => {
       const bodyLight = sceneRenderer && sceneRenderer.sampleLight(who.px, who.py);
       // The original Eyehold overseer renders through the same agent draw pass.
       // Preserve normal sprites in every other room and for every worker.
-      const ownRoom = who === agent && station && station.agentRoomId
-        ? station.roomById(station.agentRoomId(who.id || 'agent')) : null;
-      const eyeSprite = who === agent && ownRoom && ownRoom.eyeTerritory === 'keep'
-        && typeof EyeholdSprites !== 'undefined';
-      if (eyeSprite) geom = EyeholdSprites.draw(ctx, who, now);
-      if (!eyeSprite && typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
+      // Faction presentation follows the canonical workstation room assignment,
+      // not the focused agent or an invented status. The fallback is the native skin.
+      const roomId = station && station.agentRoomId && who.id
+        ? station.agentRoomId(who.id) : null;
+      const ownRoom = roomId && station.roomById ? station.roomById(roomId) : null;
+      const territory = ownRoom && ownRoom.eyeTerritory;
+      const isEye = who === agent && territory === 'keep' && typeof EyeholdSprites !== 'undefined';
+      const isFaction = !isEye && territory && typeof EyeholdFactions !== 'undefined'
+        && Object.prototype.hasOwnProperty.call(EyeholdFactions.sprites, territory);
+      if (isEye) geom = EyeholdSprites.draw(ctx, who, now);
+      else if (isFaction) geom = EyeholdFactions.draw(ctx, who, now, territory);
+      if (!geom && typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
         bodyLight ? { reducedMotion: reduceMotion(), light: bodyLight,
           skipGroundShadow: !who.seated && !who.lying } : undefined);
       // Do not flash the cyan procedural body while the real default skin is actively loading.
