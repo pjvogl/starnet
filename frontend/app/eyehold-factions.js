@@ -23,8 +23,8 @@ for(const rec of Object.values(sprites))rec.rows=rec.rows.map(row=>row.padEnd(16
 const validate=rec=>!!rec&&rec.rows.length===18&&rec.rows.every(row=>row.length===16&&[...row].every(c=>c==='.'||Object.prototype.hasOwnProperty.call(rec.palette,c)));
 function pose(body, now) {
  const walking = !!(body && (body.walking || (Array.isArray(body.path) && body.path.length>0)));
- // The world supplies 'activity' and seated posture from its real agent state.
- const working = !walking && !!(body && (body.sitting || body.seated || body.activity === 'task'));
+ // Only an explicitly projected backend run may activate the work pose.
+ const working = !walking && !!(body && body.eyeBackendRunning === true);
  return {walking,working,phase:Math.floor(Math.max(0,Number(now)||0)/160)%4};
 }
 function draw(ctx,body,now,environment){
