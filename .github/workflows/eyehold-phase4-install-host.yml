@@ -1,0 +1,50 @@
+name: Eyehold Phase 4 - Install production Crown bootstrap
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/harness-backend
+    paths:
+      - scripts/eyehold-install-host-wiring.cjs
+
+permissions:
+  contents: write
+
+jobs:
+  guarded-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/harness-backend
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Safely install after authoritative runStore
+        run: node scripts/eyehold-install-host-wiring.cjs
+      - name: Test updated production entrypoint and acceptance boundaries
+        run: |
+          node --check sidecar/index.js
+          node test/eyehold-runstore-adapter.test.js
+          node test/eyehold-crown-runtime.test.js
+          node test/eyehold-acceptance-store.test.js
+      - name: Commit guarded patch when checks pass
+        shell: bash
+        run: |
+          if git diff --quiet -- sidecar/index.js; then
+            echo 'Host already wired; no commit needed.'
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add sidecar/index.js
+            git commit -m "feat(eyehold): install fail-closed Crown runtime into live sidecar"
+            git push origin HEAD:feat/harness-backend
+          fi
+      - name: Report actual status
+        run: |
+          echo '## Host bootstrap installation' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Sidecar now loads the trusted Crown runtime from the real runStore; economic evidence approval remains explicitly disabled pending the authorized reviewer workflow.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This does NOT prove production Crown awards or automatic business-goal acceptance.' >> "$GITHUB_STEP_SUMMARY"
