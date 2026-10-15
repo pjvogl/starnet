@@ -1,0 +1,39 @@
+name: Eyehold Phase 4 - Goal-aligned Crown verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  crown-proof:
+    name: Authoritative accepted-deliverable and supervisor checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check backend module syntax
+        run: |
+          node --check sidecar/eyehold-productivity.js
+          node --check sidecar/eyehold-productivity-ledger.js
+          node --check sidecar/eyehold-work-bridge.js
+          node --check sidecar/eyehold-outcome-adapter.js
+          node --check sidecar/eyehold-supervisor.js
+      - name: Verify goal-only Crown scoring and replay prevention
+        run: |
+          node test/eyehold-productivity.test.js
+          node test/eyehold-productivity-ledger.test.js
+          node test/eyehold-work-bridge.test.js
+          node test/eyehold-outcome-adapter.test.js
+          node test/eyehold-phase4-goal-credit.test.js
+          node test/eyehold-supervisor.test.js
+      - name: Publish honest validation scope
+        if: success()
+        run: |
+          echo '## Phase 4 isolated backend proof: PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Verified goal-evidence checks, accepted deliverable scoring, durable ledger, idempotency, and supervisor snapshot using trusted in-process test stores.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Not yet proven: live sidecar event emitter/acceptance-store integration, real automated Crown awards, live Eye-to-Deepforge delegation, or actual profit.' >> "$GITHUB_STEP_SUMMARY"
