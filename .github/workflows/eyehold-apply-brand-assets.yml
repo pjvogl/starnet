@@ -1,0 +1,44 @@
+name: Apply Eyehold original desktop assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate original Eyehold brand assets
+        run: python3 scripts/eyehold/generate_brand_assets.py --output eyehold-brand-preview
+
+      - name: Replace configured desktop asset files
+        run: |
+          set -euo pipefail
+          cp eyehold-brand-preview/icons/32x32.png src-tauri/icons/32x32.png
+          cp eyehold-brand-preview/icons/128x128.png src-tauri/icons/128x128.png
+          cp eyehold-brand-preview/icons/128x128@2x.png src-tauri/icons/128x128@2x.png
+          cp eyehold-brand-preview/icons/icon.icns src-tauri/icons/icon.icns
+          cp eyehold-brand-preview/icons/icon.ico src-tauri/icons/icon.ico
+          cp eyehold-brand-preview/installer/header.bmp src-tauri/installer/header.bmp
+          cp eyehold-brand-preview/installer/sidebar.bmp src-tauri/installer/sidebar.bmp
+          cp eyehold-brand-preview/installer/dmg-background.png src-tauri/installer/dmg-background.png
+
+      - name: Commit replaced assets if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- src-tauri/icons src-tauri/installer; then
+            echo "No asset changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src-tauri/icons src-tauri/installer
+          git commit -m "brand(eyehold): replace desktop icons and installer art with original generated assets"
+          git push
