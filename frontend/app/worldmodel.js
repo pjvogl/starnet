@@ -1212,6 +1212,22 @@ const WorldModel = (() => {
       return { ok: true, id };
     }
 
+    /* EYEHOLD: optional visual territory identity saved on the canonical room.
+       It does not modify the layout kind, equipment, routing, or capability grants.
+       Uses the ordinary room undo/redo + change emission + station autosave seam. */
+    function setRoomTerritory(id, environmentId) {
+      const rm = doc.rooms[id];
+      if (!rm) return fail('NOT_FOUND', 'no such room');
+      if (rm.kind === 'corridor') return fail('BAD_KIND', 'hallways are not territories');
+      if (typeof environmentId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(environmentId))
+        return fail('BAD_ENVIRONMENT', 'invalid territory ID');
+      if (rm.eyeTerritory === environmentId) return { ok: true, id };
+      snapshot();
+      rm.eyeTerritory = environmentId;
+      emit(rm.rects.slice());
+      return { ok: true, id };
+    }
+
     const placeHallway = opts => addRoom(Object.assign({}, opts, { kind: 'corridor' }));
 
     function removeRoom(id) {
@@ -3541,7 +3557,7 @@ const WorldModel = (() => {
         return surfaceHostFor(propFootprint(propById(p.id) || p), p.id) ? 'surface' : null;
       },
       // mutations
-      addRoom, placeHallway, removeRoom, moveRoom, moveRooms, resizeRoom, setRoomKind, setFloor, setMaterial, setDeck, setWalls, setHull, paintTiles, renameRoom,
+      addRoom, placeHallway, removeRoom, setRoomTerritory, moveRoom, moveRooms, resizeRoom, setRoomKind, setFloor, setMaterial, setDeck, setWalls, setHull, paintTiles, renameRoom,
       addProp, removeProp, moveProp, moveProps, rotateProp, faceProp, mirrorProp, assignPropAgent, assignDesk, ensureWorkstation, configureJunction, swapJoinerMerger, bindConnector, bindPlugin, placePluginTerminal, setDoorState, setPropProject, setPropBrief, setPropRole, setPropHands, setPropLabel, setPropLimits,
       setBelt, removeBelt, removeBelts, placeBeltRun, connectBelt, connectionPreview, hookedBelts, stampBlueprint, insertBayBetween, canInsertBayBetween, transact, lineGraph, applyLineLayout, blueprintGraph,
       // agent-bay binding queries
@@ -3578,6 +3594,8 @@ const WorldModel = (() => {
     for (const id of doc.order) {
       const rm = doc.rooms[id];
       if (!Array.isArray(rm.rects)) rm.rects = [];
+      // Sanitize optional theme metadata without changing legacy room rendering.
+      if (rm.eyeTerritory != null && (typeof rm.eyeTerritory !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(rm.eyeTerritory))) delete rm.eyeTerritory;
       if (!rm.floorPaint) rm.floorPaint = {};
       if (!FLOOR_MATERIALS[rm.floorMat]) rm.floorMat = null;
       // Walls are additive too. Every room written before the wall axis carries a literal
