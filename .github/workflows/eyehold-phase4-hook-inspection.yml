@@ -1,0 +1,45 @@
+name: Eyehold Phase 4 - Production hook inspection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Identify actual internal acceptance and event-store hooks
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const p='sidecar/index.js';
+          const lines=fs.readFileSync(p,'utf8').split('\n');
+          const patterns=[
+            /deliverable\.accepted/,
+            /run\.end/,
+            /new EventEmitter/,
+            /\.emit\(['"]deliverable/,
+            /\/api\/runs/,
+            /\/api\/transcript/,
+            /getAcceptance/,
+            /acceptanceStore/,
+          ];
+          const matches=[];
+          for(let i=0;i<lines.length;i++){
+            if(patterns.some(p=>p.test(lines[i]))){
+              // Line numbers + coarse identifier summary only; do not expose
+              // environment variables, credentials, request bodies or data.
+              const l=lines[i];
+              const tokens=[...l.matchAll(/\b(?:function|const|let|var|class)\s+([A-Za-z_$][\w$]*)/g)].map(m=>m[1]);
+              matches.push({line:i+1,hook:patterns.find(p=>p.test(l)).source,declarations:tokens.slice(0,4)});
+            }
+          }
+          const result={file:p,lines:lines.length,matches:matches.slice(0,150),truncated:matches.length>150};
+          console.log(JSON.stringify(result,null,2));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'### Sidecar hook locations (no source code or secrets)\n\n```json\n'+JSON.stringify(result,null,2)+'\n```\n');
+          NODE
