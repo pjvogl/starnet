@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict');
+const S=require('../frontend/app/eyehold-sprites.js');
+const calls=[];
+const ctx={save(){},restore(){},fillRect(...a){calls.push(a)},set imageSmoothingEnabled(v){},set fillStyle(v){}};
+const geom=S.draw(ctx,{px:90,py:85},0);
+assert.equal(geom.top,68);
+assert(calls.length>90);
+assert.equal(S.draw(ctx,{px:NaN,py:20},0),null);
+console.log('Eyehold character sprite: OK');
