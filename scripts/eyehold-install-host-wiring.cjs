@@ -4,6 +4,7 @@
  * Installs a safe dormant Crown runtime with no accept/award HTTP endpoint.
  * Independent evidence authorization is intentionally fail-closed until a
  * reviewer-approved verification path is implemented.
+ * Production CI installs only after JS syntax and Crown unit tests pass.
  */
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
