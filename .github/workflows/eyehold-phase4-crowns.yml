@@ -23,6 +23,7 @@ jobs:
           node --check sidecar/eyehold-work-bridge.js
           node --check sidecar/eyehold-outcome-adapter.js
           node --check sidecar/eyehold-supervisor.js
+          node --check sidecar/eyehold-crown-integration.js
       - name: Verify goal-only Crown scoring and replay prevention
         run: |
           node test/eyehold-productivity.test.js
@@ -31,9 +32,10 @@ jobs:
           node test/eyehold-outcome-adapter.test.js
           node test/eyehold-phase4-goal-credit.test.js
           node test/eyehold-supervisor.test.js
+          node test/eyehold-crown-integration.test.js
       - name: Publish honest validation scope
         if: success()
         run: |
           echo '## Phase 4 isolated backend proof: PASS' >> "$GITHUB_STEP_SUMMARY"
           echo 'Verified goal-evidence checks, accepted deliverable scoring, durable ledger, idempotency, and supervisor snapshot using trusted in-process test stores.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Not yet proven: live sidecar event emitter/acceptance-store integration, real automated Crown awards, live Eye-to-Deepforge delegation, or actual profit.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Not yet proven: sidecar/index.js startup installation or genuine production acceptance-store integration. Live Eye-to-Deepforge delegation was independently reported green. No revenue/profit is claimed.' >> "$GITHUB_STEP_SUMMARY"
