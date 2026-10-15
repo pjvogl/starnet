@@ -33,6 +33,7 @@ jobs:
         run: |
           test -n "$SKYNET_OPENROUTER_KEY" || { echo "::error::OPENROUTER_API_KEY secret missing"; exit 1; }
           node --check test/eyehold-live-delegation.test.js
+          node test/eyehold-deliverable-artifact.test.js
       - name: The Eye dispatches real work to Deepforge
         timeout-minutes: 5
         run: node test/eyehold-live-delegation.test.js
