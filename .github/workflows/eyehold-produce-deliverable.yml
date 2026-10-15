@@ -34,6 +34,7 @@ jobs:
           test -n "$SKYNET_OPENROUTER_KEY" || { echo "::error::OPENROUTER_API_KEY secret missing"; exit 1; }
           node --check test/eyehold-live-delegation.test.js
           node test/eyehold-deliverable-artifact.test.js
+          node test/eyehold-review-packet.test.js
       - name: The Eye dispatches real work to Deepforge
         timeout-minutes: 5
         run: node test/eyehold-live-delegation.test.js
@@ -41,6 +42,8 @@ jobs:
         run: |
           test -s eyehold-review/deepforge-deliverable.md
           node -e "const m=require('./eyehold-review/review-manifest.json');if(m.approved!==false||m.earnedCrowns!==0||m.delegatedBy!=='agent')process.exit(1)"
+      - name: Assemble human review package with evidence fingerprint
+        run: node scripts/eyehold-review-packet.cjs eyehold-review
       - uses: actions/upload-artifact@v4
         with:
           name: eyehold-real-deliverable-for-review
@@ -50,6 +53,6 @@ jobs:
       - name: Explain outcome
         run: |
           echo '## A real Deepforge deliverable is ready for human review' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Download artifact: eyehold-real-deliverable-for-review' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Download artifact: eyehold-real-deliverable-for-review (includes REVIEW_ME.md and quality-check.json)' >> "$GITHUB_STEP_SUMMARY"
           echo 'This is **unreviewed output**, not an accepted product or earned revenue. No Crowns are awarded automatically.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Cost controls are inherited from the existing Phase 3 live delegation proof; provider charges may apply.' >> "$GITHUB_STEP_SUMMARY"
