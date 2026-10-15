@@ -1,0 +1,32 @@
+name: Eyehold Phase 1 - Sidecar startup proof
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sidecar-startup:
+    name: Real sidecar and roster boot smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Start real sidecar and exercise health, budget, and no-key guard
+        run: node test/sidecar.http.test.js
+      - name: Prove roster persistence and restart compatibility
+        run: node test/roster-envelope.http.test.js
+      - name: Summarize proven Phase 1 scope
+        if: success()
+        run: |
+          echo "## Phase 1: PASS (isolated offline smoke tests)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Actual sidecar child process started and HTTP checks passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "Agent roster persistence/restart tests passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "AI model keys, paid inference, unattended hosting and user deployment were NOT tested." >> "$GITHUB_STEP_SUMMARY"
