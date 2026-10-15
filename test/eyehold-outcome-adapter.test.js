@@ -4,7 +4,7 @@ const {EventEmitter}=require('node:events');
 const {createOutcomeAdapter}=require('../sidecar/eyehold-outcome-adapter.js');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'eye-outcome-'));
 let runStatus='running',accepted=false;
-const a={accepted:false,taskId:'task1',deliverableId:'deliver1',runId:'run1',verificationMethod:'user',evidenceRefs:['artifact1'],contributors:['agent1'],acceptanceRevision:1,predeclaredComplexity:1,quality:5,testPassed:true};
+const a={accepted:false,goalId:'profit-1m',goalAdvanced:true,goalEvidenceRef:'accepted-artifact-1',taskId:'task1',deliverableId:'deliver1',runId:'run1',verificationMethod:'user',evidenceRefs:['artifact1'],contributors:['agent1'],acceptanceRevision:1,predeclaredComplexity:1,quality:5,testPassed:true};
 try {
  const adapter=createOutcomeAdapter({file:path.join(dir,'ledger.json'),getRun:id=>id==='run1'?{id,agentId:'agent1',taskId:'task1',status:runStatus}:null,getAcceptance:(t,d)=>(t==='task1'&&d==='deliver1')?{...a,accepted}:null,getHistory:()=>[{agentId:'agent1',verified:true,outcome:'accepted'}],getAgentIds:()=>['agent1'],now:()=>123});
  assert.equal(adapter.runEndedHint({runId:'run1'}).ok,false);
