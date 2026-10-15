@@ -3,13 +3,15 @@ const assert=require('node:assert/strict');
 const os=require('node:os'),fs=require('node:fs'),path=require('node:path');
 const {openLedger}=require('../sidecar/eyehold-productivity-ledger.js');
 const home=fs.mkdtempSync(path.join(os.tmpdir(),'eye-ledger-')),file=path.join(home,'credits.json');
-const receipt={verified:true,accepted:true,taskId:'task1',deliverableId:'artifact1',runId:'run1',verificationMethod:'user',evidenceRefs:['file1'],contributors:['eye','forge']};
+const receipt={verified:true,accepted:true,goalId:'profit-1m',goalAdvanced:true,goalEvidenceRef:'file1',taskId:'task1',deliverableId:'artifact1',runId:'run1',verificationMethod:'user',evidenceRefs:['file1'],contributors:['eye','forge']};
 try{
  assert.throws(()=>openLedger(file),/verifyReceipt/);
  const bad=openLedger(file,{verifyReceipt:()=>false});
  assert.equal(bad.record(receipt).ok,false);
  assert.equal(fs.existsSync(file),false);
  const ledger=openLedger(file,{verifyReceipt:r=>r.runId==='run1'&&r.accepted===true});
+ assert.equal(ledger.record({...receipt,goalAdvanced:false}).ok,false,'no rewards for non-goal work');
+ assert.equal(ledger.record({...receipt,goalEvidenceRef:null}).ok,false,'goal evidence required');
  assert.equal(ledger.record(receipt).credited,true);
  assert.equal(ledger.record(receipt).credited,false);
  assert.equal(ledger.snapshot().length,1);
