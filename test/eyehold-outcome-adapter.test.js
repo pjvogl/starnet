@@ -1,5 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {EventEmitter}=require('node:events');
 const {createOutcomeAdapter}=require('../sidecar/eyehold-outcome-adapter.js');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'eye-outcome-'));
 let runStatus='running',accepted=false;
@@ -14,6 +15,13 @@ try {
  accepted=true;
  assert.equal(adapter.acceptedHint({taskId:'task1',deliverableId:'deliver1'}).credited,true);
  assert.equal(adapter.acceptedHint({taskId:'task1',deliverableId:'deliver1'}).credited,false);
+ const bus=new EventEmitter();
+ const detach=adapter.subscribe(bus);
+ bus.emit('run.end',{runId:'run1'});
+ bus.emit('deliverable.accepted',{taskId:'task1',deliverableId:'deliver1'});
+ assert.equal(bus.listenerCount('deliverable.accepted'),1);
+ detach();detach();
+ assert.equal(bus.listenerCount('deliverable.accepted'),0);
  assert.equal(adapter.supervisor().agents[0].crowns,25);
  assert.equal(adapter.supervisor().agents[0].executionStatus,'unknown');
  assert.equal(adapter.acceptedHint({taskId:'../bad',deliverableId:'deliver1'}).ok,false);
