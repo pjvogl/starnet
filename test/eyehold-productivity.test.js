@@ -1,10 +1,12 @@
 'use strict';
 const assert=require('node:assert/strict');
 const p=require('../sidecar/eyehold-productivity.js');
-const good={verified:true,accepted:true,taskId:'t1',deliverableId:'d1',runId:'r1',verificationMethod:'user',evidenceRefs:['artifact-1'],quality:4,testPassed:true,predeclaredComplexity:2,contributors:['eye','dwarf']};
+const good={verified:true,accepted:true,goalId:'profit-1m',goalAdvanced:true,goalEvidenceRef:'invoice-verified-1',taskId:'t1',deliverableId:'d1',runId:'r1',verificationMethod:'user',evidenceRefs:['artifact-1'],quality:4,testPassed:true,predeclaredComplexity:2,contributors:['eye','dwarf']};
 assert.equal(p.score({...good,verified:false}).crowns,0);
 assert.equal(p.score({...good,evidenceRefs:[]}).crowns,0);
 assert.equal(p.score({...good,contributors:['eye','eye']}).crowns,0);
+assert.equal(p.score({...good,goalAdvanced:false}).crowns,0);
+assert.equal(p.score({...good,goalEvidenceRef:null}).crowns,0);
 assert.equal(p.score(good).crowns,46);
 const first=p.apply([],good);assert.equal(first.events.length,1);assert.equal(first.result.allocations.reduce((s,a)=>s+a.crowns,0),46);
 const replay=p.apply(first.events,good);assert.equal(replay.events.length,1);assert.equal(replay.result.crowns,0);
