@@ -1,0 +1,67 @@
+name: Eyehold Phase 2 - Agent execution proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_live_provider_probe:
+        description: 'Opt in to a potentially billable live-provider workload (requires repository OPENROUTER_API_KEY secret)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  offline-execution:
+    name: Real sidecar run path using mock model (no spend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Exercise genuine sidecar run, streaming and completion using mock provider
+        run: node test/e2e.run.test.js
+      - name: Check that Eyehold roles can be deployed through existing specialty catalog
+        run: |
+          node test/eyehold-roles.test.js
+          node test/eyehold-specialty-integration.test.js
+          node test/eyehold-agent-binding.test.js
+      - name: Offline scope
+        if: success()
+        run: |
+          echo '## Phase 2 offline path: PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Real sidecar and run-stream pipeline tested against a mock model; no paid AI provider and no live Deepforge task was proven.' >> "$GITHUB_STEP_SUMMARY"
+
+  live-provider-probe:
+    name: Optional live model workload (potential API charges)
+    if: ${{ inputs.run_live_provider_probe == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      SKYNET_OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      STARNET_SMOKE_MODEL: ${{ vars.EYEHOLD_SMOKE_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Require explicit live provider configuration
+        shell: bash
+        run: |
+          if [ -z "$SKYNET_OPENROUTER_KEY" ]; then
+            echo "::error::Repository secret OPENROUTER_API_KEY not configured. No live run attempted."
+            exit 1
+          fi
+      - name: Run existing live workload proof (real provider billing possible)
+        run: node scripts/phase5-live-workload-proof.mjs
+      - name: Clarify proof scope
+        if: success()
+        run: |
+          echo '## Live provider workload: PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Real provider workload executed. This does not alone prove Eye-to-Deepforge delegation or Crown acceptance.' >> "$GITHUB_STEP_SUMMARY"
