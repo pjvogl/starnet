@@ -7785,7 +7785,16 @@ const World = (() => {
       const isFaction = !isEye && verifiedFaction && typeof EyeholdFactions !== 'undefined'
         && Object.prototype.hasOwnProperty.call(EyeholdFactions.sprites, verifiedFaction);
       if (isEye) geom = EyeholdSprites.draw(ctx, who, now);
-      else if (isFaction) geom = EyeholdFactions.draw(ctx, who, now, territory);
+      else if (isFaction) {
+        // Only actual tracked backend run IDs, refreshed by run events/snapshot,
+        // activate the work pose. Seated/idle agents never fake productivity.
+        const aid = who === agent ? who.id : (who.agentId || who.id);
+        const liveRuns = aid ? liveRunsByAgent.get(aid) : null;
+        const backendRunning = !!(liveRuns && liveRuns.size > 0);
+        geom = EyeholdFactions.draw(ctx, Object.assign({}, who, {
+          eyeBackendRunning: backendRunning
+        }), now, territory);
+      }
       if (!geom && typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
         bodyLight ? { reducedMotion: reduceMotion(), light: bodyLight,
           skipGroundShadow: !who.seated && !who.lying } : undefined);
