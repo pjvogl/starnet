@@ -24,6 +24,7 @@ jobs:
           node --check sidecar/eyehold-outcome-adapter.js
           node --check sidecar/eyehold-supervisor.js
           node --check sidecar/eyehold-crown-integration.js
+          node --check sidecar/eyehold-acceptance-store.js
       - name: Verify goal-only Crown scoring and replay prevention
         run: |
           node test/eyehold-productivity.test.js
@@ -33,6 +34,7 @@ jobs:
           node test/eyehold-phase4-goal-credit.test.js
           node test/eyehold-supervisor.test.js
           node test/eyehold-crown-integration.test.js
+          node test/eyehold-acceptance-store.test.js
       - name: Publish honest validation scope
         if: success()
         run: |
