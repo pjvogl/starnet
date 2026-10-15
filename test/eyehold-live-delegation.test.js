@@ -74,8 +74,8 @@ async function run(){
      const dest=path.resolve(process.env.EYEHOLD_DELIVERABLE_DIR);
      fs.mkdirSync(dest,{recursive:true,mode:0o700});
      const safeText=deliverable.slice(0,32000);
-     fs.writeFileSync(path.join(dest,'deepforge-deliverable.md'),'# Deepforge deliverable\\n\\n'+safeText+'\\n',{mode:0o600});
-     fs.writeFileSync(path.join(dest,'review-manifest.json'),JSON.stringify({kind:'unreviewed-agent-output',approved:false,earnedCrowns:0,assignment,workerRunId:worker.runId,delegatedBy:worker.delegatedBy,model},null,2)+'\\n',{mode:0o600});
+     fs.writeFileSync(path.join(dest,'deepforge-deliverable.md'),'# Deepforge deliverable\n\n'+safeText+'\n',{mode:0o600});
+     fs.writeFileSync(path.join(dest,'review-manifest.json'),JSON.stringify({kind:'unreviewed-agent-output',approved:false,earnedCrowns:0,assignment,workerRunId:worker.runId,delegatedBy:worker.delegatedBy,model},null,2)+'\n',{mode:0o600});
    }
    details.push({runId:worker.runId,delegatedBy:worker.delegatedBy,streamIdPresent:!!worker.streamId,deliveryTextLength:String(worker.deliveryText||'').length,transcriptTextLength:transcriptText.length,reason:worker.reason||worker.status||null,outputVerified:!!worker.runId&&worker.delegatedBy==='agent'&&(String(worker.deliveryText||'').length>20||transcriptText.length>20)});
  }
