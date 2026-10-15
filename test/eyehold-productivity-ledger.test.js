@@ -16,5 +16,11 @@ try{
  const reopened=openLedger(file,{verifyReceipt:()=>true});
  assert.deepEqual(reopened.totals(),ledger.totals());
  assert.equal(reopened.snapshot().length,1);
+ const tampered=path.join(home,'tampered.json');
+ fs.writeFileSync(tampered,JSON.stringify({schema:'eyehold.productivity.v1',events:[...ledger.snapshot(),...ledger.snapshot()]}));
+ assert.throws(()=>openLedger(tampered,{verifyReceipt:()=>true}),/invalid productivity ledger entries/);
+ const forged=path.join(home,'forged.json');
+ fs.writeFileSync(forged,JSON.stringify({schema:'eyehold.productivity.v1',events:[{...ledger.snapshot()[0],crowns:999}]}));
+ assert.throws(()=>openLedger(forged,{verifyReceipt:()=>true}),/invalid productivity ledger entries/);
  console.log('Eyehold durable ledger tests OK');
 }finally{fs.rmSync(home,{recursive:true,force:true});}
