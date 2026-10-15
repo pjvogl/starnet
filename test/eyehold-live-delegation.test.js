@@ -33,9 +33,13 @@ async function run(){
  });
  await ready;await sleep(250);
  const prompt='Delegate exactly ONE small task to agentId deepforge via team_dispatch: write a two-sentence description of one safe test to verify a Node.js module loads successfully. Use the engineering session if available. Do not invent the worker result or do the work yourself. Report the actual worker output.';
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),120000);
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),75000);
  let events=[];
- try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{events.push(JSON.parse(line));}catch{}}}}finally{clearTimeout(timer);}
+ try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{events.push(JSON.parse(line));}catch{}}}}catch(e){
+   const names=events.map(x=>x.name).filter(Boolean);
+   console.error('Delegation stream diagnosis:',JSON.stringify({eventCount:events.length,eventNames:[...new Set(names)].slice(0,20),runStart:names.includes('agent.run.start'),toolCalls:names.filter(n=>n==='agent.tool_call').length,stationCommands:station.slice(-12),timedOut:e?.name==='AbortError'}));
+   throw e;
+ }finally{clearTimeout(timer);}
  const runs=await(await fetch(base+'/api/runs?agent=deepforge&limit=20',{headers})).json();
  const children=(runs.runs||[]).filter(r=>r.agentId==='deepforge');
  const success=children.some(r=>r.runId&&r.deliveryText&&String(r.deliveryText).length>20);
@@ -43,4 +47,17 @@ async function run(){
  console.log(JSON.stringify(summary,null,2));
  if(!success)throw Error('Live Deepforge child-run deliverable not established');
 }
-run().catch(e=>{console.error('Live delegation BLOCKED:',e.message);process.exitCode=1;}).finally(()=>{try{sseController?.abort()}catch{};child.kill();fs.rmSync(root,{recursive:true,force:true});});
+run().catch(e=>{console.error('Live delegation BLOCKED:',e.message);process.exitCode=1;}).finally(async()=>{
+ try{sseController?.abort()}catch{}
+ try{child.kill('SIGTERM')}catch{}
+ // The sidecar writes run journals asynchronously. Wait for process exit
+ // before deleting the isolated scratch workspace; ENOTEMPTY is cleanup only.
+ if(child.exitCode===null&&child.signalCode===null){
+   await Promise.race([new Promise(resolve=>child.once('exit',resolve)),sleep(5000)]);
+ }
+ if(child.exitCode===null&&child.signalCode===null){try{child.kill('SIGKILL')}catch{}}
+ for(let i=0;i<4;i++){
+   try{fs.rmSync(root,{recursive:true,force:true,maxRetries:3,retryDelay:250});break}
+   catch(e){if(i===3)console.warn('Scratch cleanup deferred:',e.code);else await sleep(300)}
+ }
+});
