@@ -7778,9 +7778,12 @@ const World = (() => {
         ? station.agentRoomId(who.id) : null;
       const ownRoom = roomId && station.roomById ? station.roomById(roomId) : null;
       const territory = ownRoom && ownRoom.eyeTerritory;
+      const assignedSpecialty = who === agent ? (who.specialtyId || null) : (who.eyeSpecialtyId || null);
+      const verifiedFaction = typeof EyeholdAgentBinding !== 'undefined'
+        ? EyeholdAgentBinding.resolve(assignedSpecialty, territory) : null;
       const isEye = who === agent && territory === 'keep' && typeof EyeholdSprites !== 'undefined';
-      const isFaction = !isEye && territory && typeof EyeholdFactions !== 'undefined'
-        && Object.prototype.hasOwnProperty.call(EyeholdFactions.sprites, territory);
+      const isFaction = !isEye && verifiedFaction && typeof EyeholdFactions !== 'undefined'
+        && Object.prototype.hasOwnProperty.call(EyeholdFactions.sprites, verifiedFaction);
       if (isEye) geom = EyeholdSprites.draw(ctx, who, now);
       else if (isFaction) geom = EyeholdFactions.draw(ctx, who, now, territory);
       if (!geom && typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
@@ -9978,6 +9981,7 @@ const World = (() => {
       // knows only the agent id, so that provisional body carries the default skin/id label/synthetic color.
       // Rehydrate the roster-owned display identity here too; returning with only `summoned` restored made every
       // bay-bound agent LOOK reset after relaunch even though its dossier still held the chosen skin.
+      ex.eyeSpecialtyId = a.specialtyId || null;
       if (a.name) ex.name = a.name;
       if (a.color) ex.color = a.color;
       if (a.skin && typeof DATA !== 'undefined' && DATA.SKINS && DATA.SKINS[a.skin]) ex.skin = a.skin;
@@ -9985,6 +9989,7 @@ const World = (() => {
     }
     const f = geo ? workerFoot() : { x: 0, y: 0 };                        // pre-geo: parked at origin, re-footed on first syncCrewFromPlan
     const b = makeCrewBody(a.id, a.name || a.id, a.color || crewColor(a.id), f.x, f.y, a.skin);
+    b.eyeSpecialtyId = a.specialtyId || null;
     b.summoned = true; b.wakeAt = fnow;                                   // a small materialize ripple
     b.idleUntil = fnow + U.irnd(1400, 3200);                              // hold a beat after materializing, then it strolls
     crew.push(b);
