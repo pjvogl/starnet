@@ -1,0 +1,35 @@
+name: Eyehold Phase 4 - Acceptance hook readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check authoritative Crown acceptance seam without API billing
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const source=fs.readFileSync('sidecar/index.js','utf8');
+          const checks={
+            crownIntegrationImported:/eyehold-crown-integration/.test(source),
+            acceptedEventEmitted:/\.emit\(\s*['"]deliverable\.accepted['"]/.test(source),
+            acceptanceStoreMentioned:/getAcceptance|acceptanceStore|acceptanceRecords/.test(source),
+            runEndMentioned:/run\.end/.test(source)
+          };
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            '## Crown production integration readiness\n\n'+
+            Object.entries(checks).map(([k,v])=>'- '+k+': '+(v?'present':'not located')+'\n').join('')+
+            '\nThis is a static source check, not proof of wired live acceptance.\n');
+          console.log(JSON.stringify(checks));
+          if(!checks.crownIntegrationImported||!checks.acceptedEventEmitted||!checks.acceptanceStoreMentioned){
+            console.log('Integration contract incomplete; not claiming production Crown awards.');
+          }
+          NODE
