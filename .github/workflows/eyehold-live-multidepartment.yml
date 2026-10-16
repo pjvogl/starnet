@@ -1,0 +1,42 @@
+name: Eyehold - Live two department handoff
+
+on:
+  workflow_dispatch:
+    inputs:
+      assignment:
+        description: 'One small bounded client-facing engineering or research deliverable'
+        required: true
+        type: string
+        default: 'Outline a customer-ready Node.js release readiness service with measurable acceptance criteria.'
+
+permissions:
+  contents: read
+
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SKYNET_OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      EYEHOLD_DELEGATION_MODEL: ${{ vars.EYEHOLD_DELEGATION_MODEL }}
+      EYEHOLD_ASSIGNMENT: ${{ inputs.assignment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate and require live provider consent
+        run: |
+          test -n "$SKYNET_OPENROUTER_KEY"
+          node --check test/eyehold-live-multidepartment.test.js
+      - name: Real supervisor to two specialists
+        timeout-minutes: 5
+        run: node test/eyehold-live-multidepartment.test.js
+      - name: Scope and safety
+        run: |
+          echo '## Multi-specialist live delegation confirmed' >> "$GITHUB_STEP_SUMMARY"
+          echo 'The Eye delegated to Raven Court and Deepforge; actual persisted child run evidence checked.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No external accounts created, no real revenue claimed, and no Crowns minted.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This real-model test consumes OpenRouter credits; manual trigger only.' >> "$GITHUB_STEP_SUMMARY"
