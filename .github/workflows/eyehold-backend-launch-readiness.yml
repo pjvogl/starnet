@@ -39,6 +39,7 @@ jobs:
           node test/eyehold-acceptance-store.test.js
           node test/eyehold-finance-truth.test.js
           node test/eyehold-loot-milestones.test.js
+          node test/eyehold-native-loot.test.js
           node test/eyehold-delegation-contract.test.js
           node test/eyehold-external-account-policy.test.js
           node test/eyehold-seven-agent-restart.test.js
