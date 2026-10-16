@@ -67,6 +67,10 @@ jobs:
             echo "::endgroup::"
           done
 
+  eyehold-ui-readiness:
+    name: Offline app and browser readiness
+    uses: ./.github/workflows/eyehold-backend-launch-readiness.yml
+
   release-drift-report:
     name: Read-only release drift report
     runs-on: ubuntu-latest

@@ -2,6 +2,7 @@ name: Eyehold - Backend launch readiness
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -25,12 +26,18 @@ jobs:
           node --check frontend/app/eyehold-staff-departments.js
           node --check test/eyehold-live-multidepartment.test.js
       - name: Verify physical rooms, desks, native app activation
+        env:
+          SKYNET_LIVE_PRICES: '0'
+          NODE_OPTIONS: --require=${{ github.workspace }}/test/helpers/eyehold-loopback-only.cjs
         run: |
           node test/eyehold-seven-room-starter.test.js
           node test/eyehold-activation-ui.test.js
           node test/eyehold-departments.test.js
           node test/eyehold-workboard.test.js
       - name: Verify backend run persistence, delegation and owner review
+        env:
+          SKYNET_LIVE_PRICES: '0'
+          NODE_OPTIONS: --require=${{ github.workspace }}/test/helpers/eyehold-loopback-only.cjs
         run: |
           node test/eyehold-launch-readiness.test.js
           node test/eyehold-runstore-adapter.test.js
@@ -52,6 +59,8 @@ jobs:
       - name: Verify real Work Board and Treasury in desktop and mobile viewports
         env:
           EYEHOLD_CHROME: /usr/bin/google-chrome
+          SKYNET_LIVE_PRICES: '0'
+          NODE_OPTIONS: --require=${{ github.workspace }}/test/helpers/eyehold-loopback-only.cjs
         run: node scripts/qa/eyehold-ui-smoke.cjs eyehold-ui-evidence
       - name: Save isolated UI fixture screenshots
         if: always()
