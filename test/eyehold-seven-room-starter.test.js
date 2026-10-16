@@ -7,6 +7,8 @@ assert.equal(rooms.filter(r=>r.kind!=='corridor').length,7);
 assert.equal(rooms.filter(r=>r.kind==='corridor').length,1);
 assert.deepEqual(rooms.filter(r=>r.kind!=='corridor').map(r=>r.eyeTerritory).sort(),['archive','astral','astral','forge','foundry','keep','moonleaf'].sort());
 assert(result.placed.length===6);
+assert.equal(d.props.filter(p=>p.t==='desk').length,7,'one actual workstation per department');
+assert(result.placed.every(p=>d.props.some(x=>x.id===p.deskId)),'every specialist room has a real desk');
 assert.equal(d.rooms[result.homeId].name,'The Eye - Command Keep');
 assert(d.props.some(p=>p.t==='desk'),'preserve original work desk');
 const doc2=buildEyeholdStation().doc;
