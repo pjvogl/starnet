@@ -7,7 +7,7 @@
 (function(root,factory){const v=factory();if(typeof module!=='undefined'&&module.exports)module.exports=v;else root.EyeholdNativeLoot=v;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  const ROOM_PREFIX={command:'The Eye',opportunities:'Raven Court',strategy:'Star Sages',operations:'Iron Host',production:'Deepforge',quality:'Silver Bough',finance:'Treasury Watch'};
  // Genuine native catalog props; new fantasy illustrations require separate art.
- const PROPS={1000000:'rug',10000000:'plant',100000000:'lamp'};
+ const PROPS={1000000:'plant',10000000:'shelf',100000000:'vault'};
  function plan(station,tier){
   if(!Object.prototype.hasOwnProperty.call(PROPS,String(tier)))throw Error('unsupported tier');
   const doc=station.serialize(),rooms=Object.values(doc.rooms||{});
@@ -15,7 +15,7 @@
    const room=rooms.find(r=>r.kind!=='corridor'&&String(r.name||'').startsWith(prefix));
    if(!room)throw Error('missing physical room for '+department);
    const rect=(room.rects||[])[0];if(!rect)throw Error('missing geometry '+department);
-   const centerX=Math.floor((rect.x1+rect.x2)/2),y=rect.y1+2+([1000000,10000000,100000000].indexOf(tier));
+   const centerX=Math.floor((rect.x1+rect.x2)/2),y=rect.y1+4+([1000000,10000000,100000000].indexOf(tier));
    return {department,tier,t:PROPS[tier],x:centerX,y,w:1,h:1};
   });
  }
