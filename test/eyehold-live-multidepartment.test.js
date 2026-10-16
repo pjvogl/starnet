@@ -36,7 +36,11 @@ async function run(){
  const assignment=String(process.env.EYEHOLD_ASSIGNMENT||'Write a two-sentence description of one safe test to verify a Node.js module loads successfully.').trim();
  if(assignment.length<15||assignment.length>1800)throw Error('Assignment must be 15-1800 characters');
  const prompt='Use team_dispatch with exactly this JSON shape: '+JSON.stringify({workers:[{agentId:'raven',prompt:'Research the customer need, commercial assumptions, limitations and validation requirements for: '+assignment,session:'research'},{agentId:'deepforge',prompt:'Draft a practical technical deliverable for: '+assignment,session:'engineering'}]})+'. Delegate both tasks to RAVEN COURT and DEEPFORGE in their named sessions. Do not invent their results or do the work yourself. Summarize the actual work of each specialist.';
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),75000);
+ // Two real delegated worker runs can take substantially longer than a single agent.
+ // Keep a bounded deadline while allowing both departments to finish.
+ const deadlineMs=Number(process.env.EYEHOLD_HANDOFF_TIMEOUT_MS)||210000;
+ if(deadlineMs<75000||deadlineMs>240000)throw Error('Handoff timeout outside permitted bounds');
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),deadlineMs);
  let events=[],approvedPromptIds=new Set(),runId='';
  try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{
  const ev=JSON.parse(line);events.push(ev);
@@ -56,7 +60,8 @@ async function run(){
 }catch(e){if(e.message?.startsWith('Run consent rejected'))throw e;}}}}catch(e){
    const names=events.map(x=>x.name).filter(Boolean);
    console.error('Delegation stream diagnosis:',JSON.stringify({eventCount:events.length,eventNames:[...new Set(names)].slice(0,20),runStart:names.includes('agent.run.start'),toolCalls:names.filter(n=>n==='agent.tool_call').length,stationCommands:station.slice(-12),permissionsAnswered:approvedPromptIds.size,timedOut:e?.name==='AbortError'}));
-   throw e;
+   if(e?.name!=='AbortError')throw e;
+   console.error('Supervisor timed out; inspecting saved worker runs before marking proof failed.');
  }finally{clearTimeout(timer);}
  const runs=await(await fetch(base+'/api/runs?agent=*&limit=60',{headers})).json();
  const children=(runs.runs||[]).filter(r=>['raven','deepforge'].includes(r.agentId));
@@ -90,7 +95,7 @@ async function run(){
    return {name:p.name||null,argumentsAvailable:!!(p.arguments||p.args||p.input),workerCount:workers.length,targetAgentIds:workers.map(w=>w.agentId).filter(Boolean),targetSessionTitles:workers.map(w=>w.session||null)};
  }),stationCommands:station.filter(x=>x?.verb?.startsWith('station.')).length,stationVerbs:station.map(x=>x.verb),toolResults:events.filter(e=>e.name==='agent.tool_result').map(e=>({isError:!!e.payload?.isError,fields:Object.keys(e.payload||{}).filter(k=>!['content','text','result','output'].includes(k))})),delivered:station.filter(x=>x.verb==='station.deliver'),model};
  console.log(JSON.stringify(summary,null,2));
- if(!success)throw Error('Real Raven Court and Deepforge child-run deliverables were not both established');
+ if(!success)throw Error('Incomplete multi-department handoff: '+JSON.stringify(details.map(d=>({agentId:d.agentId,verified:d.outputVerified,reason:d.reason})))+'; preserve completed worker evidence and retry only after diagnosis');
 }
 run().catch(e=>{console.error('Multi-department delegation BLOCKED:',e.message);process.exitCode=1;}).finally(async()=>{
  try{sseController?.abort()}catch{}
