@@ -9,4 +9,13 @@ const r=reportBusinessProfit({records:[{type:'revenue',cents:12000,verified:true
 assert.equal(r.netProfitUSD,102.5);
 assert.equal(r.remainingUSD,999897.5);
 assert.match(r.scope,/not a reconciled bank/);
+const {milestoneState,PROFIT_MILESTONES_USD}=require('../sidecar/eyehold-finance-truth.js');
+assert.deepEqual(PROFIT_MILESTONES_USD,[1000000,10000000,100000000]);
+assert.equal(reportBusinessProfit().remainingToNextUSD,null);
+assert.equal(milestoneState(999999.99).currentMilestoneUSD,1000000);
+assert.equal(milestoneState(1000000).currentMilestoneUSD,10000000);
+assert.deepEqual(milestoneState(10000000).completedMilestonesUSD,[1000000,10000000]);
+assert.equal(milestoneState(100000000).ultimateMilestoneReached,true);
+assert.equal(milestoneState(100000000).remainingToNextUSD,0);
+assert.equal(milestoneState(-500).currentMilestoneUSD,1000000);
 console.log('Eyehold finance truth gate: unavailable stays unavailable; verified-record math correct');
