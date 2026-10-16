@@ -29,6 +29,9 @@
   board.append(heading,description,assign,refresh,status,list,detail);
   document.body.append(toggle,board);
   let loading=false;
+  // Reflect actual live sidecar records while this panel is visible.
+  const poll=setInterval(()=>{if(!board.hidden&&document.visibilityState==='visible')load()},5000);
+  window.addEventListener('pagehide',()=>clearInterval(poll),{once:true});
   async function load(){
    if(loading||board.hidden)return;
    loading=true;status.textContent='Reading real run records…';
