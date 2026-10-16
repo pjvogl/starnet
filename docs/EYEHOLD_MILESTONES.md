@@ -84,3 +84,9 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 ## 2026-10-16 source syntax preflight
 - Direct JavaScript parsing of the newly modified modules caught invalid quoted text in `frontend/app/eyehold-workboard.js`. Fixed in commit `88a68178c5749b29997a4983049fd4fea23cb1de`. New on-demand syntax check passes for that file and the other new JS modules inspected.
 - Still requires offline WorldModel runtime test via manual `.github/workflows/eyehold-seven-room-blueprint.yml`, plus user confirmation that the game's import/staff actions persist after restart. The manual paid `.github/workflows/eyehold-live-multidepartment.yml` must pass before claiming Raven Court + Deepforge are proven in one real delegation.
+
+## 2026-10-16 consolidated backend launch readiness
+- User reports the seven-room blueprint workflow is GREEN. This verifies native room generation and its specified offline tests, not a deployed station.
+- Added manual/no-provider-charge `.github/workflows/eyehold-backend-launch-readiness.yml` running syntax checks plus physical layout, roster UI wiring, runStore adapter, Crown runtime, durable acceptance and owner HTTP authorization tests. `test/eyehold-launch-readiness.test.js` additionally enforces manual-only charged workflows, capped two-specialist live proof, and server-derived owner authorization.
+- **Still pending a green consolidated readiness run**: do not call backend launch certified until its result is checked. A green result does not prove live UI, hosted availability, real provider connectivity, authenticated owner review in production, external account connections, or generated revenue.
+- The first operator launch must use a computer capable of running Node.js / hosting sidecar, or a separately configured trusted hosted deployment; no public application URL is presently verified.
