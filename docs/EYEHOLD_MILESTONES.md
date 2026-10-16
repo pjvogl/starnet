@@ -61,3 +61,8 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - **Important:** Department labels do not automatically place physical rooms, summon additional agents, connect banks, register accounts, send outreach, or generate revenue. Actual room construction and active agent bindings in the persistent game require integration with the game's room layout/store and real roster.
 - Added a COMMS assignment navigation action and five-second run history refresh to the Work Board; still pending real in-game browser verification.
 - Next: connect these department assignments to user-created world rooms/roster and verified backend runs; then owner-controlled review, spending limits and financial bookkeeping. Require explicit approval for creating outside accounts, outreach, financial transactions and recurring spend.
+
+## Multi-department reality check (2026-10-16)
+- Added **CHECK LIVE CREW** in the Work Board, backed by the current sidecar `GET /api/roster`, showing how many of seven department specialty assignments actually exist. No implied agents, accounts or built rooms.
+- Business role and interdepartmental handoff plans are represented in `frontend/app/eyehold-departments.js`; matching physical room geometry and roster activation remains pending. Shared StarNet WorldModel supports explicit `addRoom` and `setRoomTerritory`, but physical world mutations must respect collision/build-mode persistence and operator consent.
+- Explicitly do not create external accounts or connect personal financial data; Treasury Watch must report only verified business revenue/cost inputs. Automated commercial production cannot be called active until actual persistent rooms, staffed agents and authorized delegation are demonstrated.
