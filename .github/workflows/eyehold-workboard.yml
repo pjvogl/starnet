@@ -7,8 +7,10 @@ on:
       - feat/harness-backend
     paths:
       - frontend/app/eyehold-workboard.js
+      - frontend/app/eyehold-departments.js
       - frontend/index.html
       - test/eyehold-workboard.test.js
+      - test/eyehold-departments.test.js
 
 permissions:
   contents: read
@@ -24,6 +26,8 @@ jobs:
           node-version: '22'
       - run: |
           node --check frontend/app/eyehold-workboard.js
+          node --check frontend/app/eyehold-departments.js
+          node test/eyehold-departments.test.js
           node test/eyehold-workboard.test.js
       - name: Explain scope
         run: |
