@@ -54,3 +54,10 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - Operator reported `Eyehold - Produce a real deliverable` green following JSON export fix. The CI produced a real delegated worker artifact; this does **not** imply it was inspected or accepted.
 - Added a deterministic review packet generator (`scripts/eyehold-review-packet.cjs`) to the live deliverable workflow: `REVIEW_ME.md` human checklist, `quality-check.json` structural checks and SHA-256 digest. Added offline test `test/eyehold-review-packet.test.js`; the amended workflow still awaits confirmation.
 - Next functional step: review the actual file with the owner; then connect an authenticated review action in the live Eyehold app. A GitHub artifact and offline review checklist are not a game UI, and do not create earned Crowns or revenue.
+
+## Multi-room commercial workforce design (2026-10-16)
+- Seven existing Eyehold specialty factions identified in `frontend/app/eyehold-roles.js`; previous assumption that only one role existed was incorrect.
+- Added `frontend/app/eyehold-departments.js` and a Business Departments view in the Work Board: Command, Opportunity Research, Business Strategy, Operations, Production, Quality and Treasury Watch. Each specifies responsibilities, handoffs and permitted authority. The source code and CI test are committed.
+- **Important:** Department labels do not automatically place physical rooms, summon additional agents, connect banks, register accounts, send outreach, or generate revenue. Actual room construction and active agent bindings in the persistent game require integration with the game's room layout/store and real roster.
+- Added a COMMS assignment navigation action and five-second run history refresh to the Work Board; still pending real in-game browser verification.
+- Next: connect these department assignments to user-created world rooms/roster and verified backend runs; then owner-controlled review, spending limits and financial bookkeeping. Require explicit approval for creating outside accounts, outreach, financial transactions and recurring spend.
