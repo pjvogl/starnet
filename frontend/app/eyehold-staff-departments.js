@@ -36,7 +36,12 @@
      if(!room){reports.push(name+': room missing');continue}
      const desk=(doc.props||[]).find(p=>p.t==='desk'&&!p.agentId&&room.rects.some(q=>p.x>=q.x1&&p.x<=q.x2&&p.y>=q.y1&&p.y<=q.y2));
      const existing=App.agents().find(a=>String(a.name||'').toUpperCase()===name);
-     if(existing){reports.push(name+': already on roster');continue}
+     if(existing){
+      if(!desk){reports.push(name+': already on roster; check its workstation');continue}
+      const link=station.assignDesk(desk.id,existing.id);
+      reports.push(name+': existing agent '+(link&&link.ok?'desk assigned':'requires desk review'));
+      continue;
+     }
      if(!desk){reports.push(name+': unoccupied desk not found');continue}
      const spec=Specialties.get(specialtyId);
      if(!spec){reports.push(name+': specialty not available');continue}
