@@ -37,6 +37,8 @@ jobs:
           node test/eyehold-owner-review-http.test.js
           node test/eyehold-crown-runtime.test.js
           node test/eyehold-acceptance-store.test.js
+          node test/eyehold-finance-truth.test.js
+          node test/eyehold-seven-agent-restart.test.js
       - name: Readiness report
         run: |
           {
