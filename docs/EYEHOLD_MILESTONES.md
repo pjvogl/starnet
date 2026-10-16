@@ -221,3 +221,17 @@ refund prevents new unlocks but does not delete placed furniture.
 - Paid live handoff remains manual-only and pending. Later owner-review, bounded
   unattended work, commercial pilot, custom artwork and signed release stages have
   not been marked complete. Keep this order; do not turn test receipts into income.
+
+## 2026-10-16 real browser regression resolved
+
+- Obtained a local Chromium executable through temporary test dependencies; the
+  actual browser smoke test now runs locally against a real disposable sidecar.
+- Browser execution confirmed: missing financial data stays unavailable; one
+  synthetic reviewed fixture receipt installs seven native room markers; reload
+  retains exactly seven; the Work Board fits 1440px desktop and 390px phone widths;
+  no page errors or model calls occurred.
+- It found a real mobile bug: body text zoom enlarged the board beyond the viewport.
+  Updated its width/height caps to use the app's existing `--sn-unzoom` reciprocal.
+  The complete browser smoke test passed after this fix. CI rerun is still pending.
+- Paid Raven-to-Deepforge execution remains the next dependency. Do not mark owner
+  review/Crowns, unattended operation, commercial integrations, or release complete.
