@@ -20,7 +20,11 @@
   const list=document.createElement('ol');list.style.cssText='padding-left:20px;margin:8px 0';
   const refresh=document.createElement('button');refresh.textContent='REFRESH';refresh.type='button';
   refresh.style.cssText='background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
-  board.append(heading,description,refresh,status,list);
+  const detail=document.createElement('section');detail.setAttribute('aria-label','Selected agent deliverable');detail.hidden=true;detail.style.cssText='border-top:1px solid #665741;margin-top:12px;padding-top:10px';
+  const detailHead=document.createElement('h3');detailHead.textContent='WORK DETAIL';
+  const detailBody=document.createElement('pre');detailBody.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto';
+  detail.append(detailHead,detailBody);
+  board.append(heading,description,refresh,status,list,detail);
   document.body.append(toggle,board);
   let loading=false;
   async function load(){
@@ -36,12 +40,28 @@
      const agent=String(run.agentId||'Unknown agent').slice(0,60);
      const name=String(run.title||run.deliveryText||run.runId||'Untitled run').replace(/\s+/g,' ').slice(0,100);
      const outcome=run.reason==='done'?'Completed':run.reason?String(run.reason).slice(0,40):'Recorded';
-     li.textContent=agent+' — '+name+' ['+outcome+']';
+     const open=document.createElement('button');open.type='button';open.textContent=agent+' — '+name+' ['+outcome+']';
+     open.style.cssText='background:none;color:#ead6ad;text-align:left;border:0;text-decoration:underline;cursor:pointer;font:inherit';
+     open.addEventListener('click',()=>showDetails(run));li.appendChild(open);
      li.style.marginBottom='8px';list.appendChild(li);
     }
     status.textContent=runs.length?runs.length+' recent run records; open existing sessions or OUTBOX to inspect content.':'No run records in this sidecar workspace yet.';
    }catch(e){list.replaceChildren();status.textContent='Unable to load run history. Start or reconnect the local sidecar. '+e.message}
    finally{loading=false}
+  }
+  async function showDetails(run){
+   detail.hidden=false;detailHead.textContent='WORK DETAIL — '+String(run.agentId||'Agent').slice(0,60);
+   detailBody.textContent='Loading recorded output…';
+   const agent=String(run.agentId||'agent');const stream=String(run.streamId||'');
+   if(!/^[A-Za-z0-9_-]{1,100}$/.test(stream)){detailBody.textContent='This run has no available transcript stream. Open its original session or OUTBOX to inspect work.';return}
+   try{
+    const url='/api/transcript?agent='+encodeURIComponent(agent)+'&stream='+encodeURIComponent(stream)+'&limit=150';
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)throw Error('Transcript unavailable (HTTP '+response.status+')');
+    const data=await response.json();const turns=Array.isArray(data.turns)?data.turns:[];
+    const messages=turns.filter(t=>t&&t.role==='assistant'&&typeof t.content==='string'&&t.content.trim());
+    detailBody.textContent=messages.length?messages.map(t=>t.content).join('\n\n').slice(0,30000):'No saved assistant output found for this run. It may be available in the original session or OUTBOX.';
+   }catch(e){detailBody.textContent='Unable to read this saved work: '+e.message}
   }
   toggle.addEventListener('click',()=>{board.hidden=!board.hidden;toggle.setAttribute('aria-expanded',String(!board.hidden));if(!board.hidden)load()});
   refresh.addEventListener('click',load);
