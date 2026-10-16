@@ -202,3 +202,22 @@ refund prevents new unlocks but does not delete placed furniture.
   a signed or published release.
 - Pending: automatic GitHub checks on this correction, then manual browser readiness
   and live two-department handoff before advancing to production owner review.
+
+## 2026-10-16 ordered completion: persistence and browser proof
+
+- Corrected offline module job passed on GitHub at `f4a723ad`; it no longer
+  attempts paid proof entrypoints. Eval and secret-history checks passed.
+- Reused the no-model browser readiness workflow inside module CI at `d042b952`.
+  Its offline checks passed. Browser execution reached Chrome, but its test station
+  stopped at credential recovery: the seed had no provider. Updated that isolated
+  seed to use the supported keyless local provider with model execution blocked,
+  and added failure screenshots/diagnostics. Browser rerun is still required.
+- Replaced the weak roster re-registration test with a real persistence proof:
+  new token-gated, read-only `/api/eyehold/crew` exposes bounded identity/model
+  metadata, not system prompts. The test registers seven agents once, saves all
+  seven staffed rooms/desks and named sessions, restarts the real sidecar, and
+  reads the restored server roster without re-registration. Passed locally under
+  loopback-only networking. This does not claim seven actual model completions.
+- Paid live handoff remains manual-only and pending. Later owner-review, bounded
+  unattended work, commercial pilot, custom artwork and signed release stages have
+  not been marked complete. Keep this order; do not turn test receipts into income.

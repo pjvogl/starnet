@@ -1,42 +1,38 @@
-/* Manual, zero-provider-spend integration test:
- * prove real sidecar accepts seven roster members and retains persistent
- * workspace state through a process restart. Does not call /api/run.
+/* Real sidecar persistence: roster, seven physical workstations and sessions.
+ * No /api/run calls, provider credentials or completed-work claims.
  */
 'use strict';
-const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawn}=require('node:child_process');
-const {bootToken}=require('./_httpToken.js');
-const dir=fs.mkdtempSync(path.join(os.tmpdir(),'eye-seven-persist-'));
-const port=21000+Math.floor(Math.random()*16000),base='http://127.0.0.1:'+port;
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let child=null;
-async function start(){
- child=spawn(process.execPath,[path.resolve(__dirname,'../sidecar/index.js')],{env:{...process.env,SKYNET_PORT:String(port),SKYNET_WORKSPACES:dir,SKYNET_BUDGET_GLOBAL:'0',SKYNET_BUDGET_PER_DAY:'0'},stdio:'ignore'});
- for(let i=0;i<70;i++){try{if((await fetch(base+'/api/health')).ok)break}catch{}if(i===69)throw Error('sidecar start failed');await sleep(150)}
- const token=await bootToken(base,base);assert(token,'sidecar token is required');
- return {'X-StarNet-Token':token,Origin:base,'Content-Type':'application/json'};
-}
-async function stop(){
- if(!child)return;const proc=child;child=null;
- proc.kill('SIGTERM');
- await Promise.race([new Promise(resolve=>{if(proc.exitCode!==null||proc.signalCode!==null)resolve();else proc.once('exit',resolve)}),sleep(4000)]);
- if(proc.exitCode===null&&proc.signalCode===null)proc.kill('SIGKILL');
- await sleep(250);
-}
+const assert=require('node:assert/strict');
+const {SidecarFixture}=require('./helpers/sidecar-fixture.js');
+const {buildEyeholdStation}=require('../scripts/eyehold-seven-room-starter.cjs');
+const WorldModel=require('../frontend/app/worldmodel.js');
+const Workstreams=require('../frontend/app/workstreams.js');
 const ids=['agent','raven','sages','iron','deepforge','silver','treasury'];
+const names=['THE EYE','RAVEN COURT','STAR SAGES','IRON HOST','DEEPFORGE','SILVER BOUGH','TREASURY WATCH'];
 const specialties=['eyehold-keep','eyehold-archive','eyehold-astral','eyehold-foundry','eyehold-forge','eyehold-moonleaf','eyehold-astral'];
-const roster=ids.map((agentId,i)=>({agentId,name:agentId.toUpperCase(),model:'openai/gpt-4.1-mini',provider:'openrouter',specialtyId:specialties[i],system:'Offline roster persistence verification only. No external actions.'}));
+const roster=ids.map((agentId,i)=>({agentId,name:names[i],model:'openai/gpt-4.1-mini',provider:'openrouter',specialtyId:specialties[i],system:'Offline fixture only; never submit a model request.'}));
+const fixture=SidecarFixture.create({env:{SKYNET_BUDGET_GLOBAL:'0',SKYNET_BUDGET_PER_DAY:'0',SKYNET_LIVE_PRICES:'0'}});
+async function crew(){const r=await fixture.json('GET','/api/eyehold/crew');assert.equal(r.status,200);assert.equal(r.body.source,'server-roster');assert.deepEqual(r.body.agents.map(a=>a.agentId).sort(),[...ids].sort());for(const a of r.body.agents){assert.equal(a.model,'openai/gpt-4.1-mini');assert.equal(a.provider,'openrouter');assert(!('system' in a),'read-only crew API must omit prompts');}}
 async function run(){
- let headers=await start();
- let r=await fetch(base+'/api/roster',{method:'POST',headers,body:JSON.stringify({agents:roster,updatedAt:Date.now()})});
- assert.equal(r.status,200,'sidecar must accept seven agents: '+await r.text());
- // The sidecar's roster route is a registration POST, not a public GET API.
- // On reconnect the persistent browser application restores its saved roster and
- // pushes it again. Exercise that real host-facing re-registration contract.
- await stop();
- headers=await start();
- r=await fetch(base+'/api/roster',{method:'POST',headers,body:JSON.stringify({agents:roster,updatedAt:Date.now()})});
- assert.equal(r.status,200,'sidecar must accept a full seven-agent roster after restart: '+await r.text());
- console.log('PASS: sidecar accepts seven-agent roster before and after restart; browser rehydration is required');
- console.log('NOT PROVED: server-side roster persistence or durable conversation transcripts');
+ await fixture.start();
+ assert.equal((await fixture.request('/api/eyehold/crew',{headers:{'X-StarNet-Token':''}})).status,403);
+ const registered=await fixture.json('POST','/api/roster',{agents:roster,updatedAt:Date.now()});assert.equal(registered.body.ok,true);await crew();
+ const blueprint=buildEyeholdStation(),station=WorldModel.deserialize(blueprint.doc);
+ const home=station.roomById(blueprint.homeId);
+ const homeDesk=station.props().find(p=>p.t==='desk'&&home.rects.some(r=>p.x>=r.x1&&p.x<=r.x2&&p.y>=r.y1&&p.y<=r.y2));
+ assert(station.assignDesk(homeDesk.id,'agent').ok);
+ for(let i=0;i<blueprint.placed.length;i++)assert(station.assignDesk(blueprint.placed[i].deskId,ids[i+1]).ok);
+ Workstreams.reset();const sessions=ids.map((agentId,i)=>Workstreams.create(['command','research','strategy','operations','engineering','quality','finance'][i],{agentId,activate:false}));
+ const saved=await fixture.json('POST','/api/save',{schema:'starnet.save',version:6,updatedAt:Date.now(),agent:{id:'agent',name:names[0]},agents:roster.map(a=>({id:a.agentId,name:a.name,specialtyId:a.specialtyId})),station:station.serialize(),...Workstreams.serialize()});assert.equal(saved.body.ok,true);
+ await fixture.restart();
+ // No re-registration: this reads the host's actual restored in-memory roster.
+ await crew();
+ const recovered=await fixture.json('GET','/api/save?agent=agent');assert.equal(recovered.status,200);
+ const doc=recovered.body.save;assert.equal(doc.agents.length,7);
+ const restored=WorldModel.deserialize(doc.station);assert.equal(restored.rooms().filter(r=>r.kind!=='corridor').length,7);
+ for(const id of ids)assert.equal(restored.props().filter(p=>p.t==='desk'&&p.agentId===id).length,1,id+' workstation survived');
+ Workstreams.reset();Workstreams.init(doc);
+ for(const session of sessions){const restoredSession=Workstreams.get(session.id);assert(restoredSession);assert.equal(restoredSession.agentId,session.agentId);assert.equal(restoredSession.title,session.title);}
+ console.log('PASS: real sidecar restores seven-agent roster without re-registration, seven staffed rooms, and seven named sessions after restart; no paid inference');
 }
-run().catch(e=>{console.error('Persistence BLOCKED:',e);process.exitCode=1}).finally(async()=>{await stop();fs.rmSync(dir,{recursive:true,force:true,maxRetries:5,retryDelay:200})});
+run().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>fixture.dispose());
