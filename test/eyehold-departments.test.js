@@ -12,6 +12,8 @@ const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8')
 const board=fs.readFileSync(path.join(__dirname,'../frontend/app/eyehold-workboard.js'),'utf8');
 assert(html.indexOf('app/eyehold-departments.js')<html.indexOf('app/eyehold-workboard.js'));
 assert(board.includes('BUSINESS DEPARTMENTS'));
+assert(board.includes('CHECK LIVE CREW'));
+assert(board.includes("fetch('/api/roster'"));
 assert(board.includes('room/agent activation not yet verified'));
 assert(!board.includes('fetch(\'/api/payments'));
 console.log('Eyehold department handoff catalog and truthful work-board display verified');
