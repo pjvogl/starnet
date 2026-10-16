@@ -11,6 +11,12 @@ assert.equal(d.props.filter(p=>p.t==='desk').length,7,'one actual workstation pe
 assert(result.placed.every(p=>d.props.some(x=>x.id===p.deskId)),'every specialist room has a real desk');
 assert.equal(d.rooms[result.homeId].name,'The Eye - Command Keep');
 assert(d.props.some(p=>p.t==='desk'),'preserve original work desk');
+const WorldModel=require('../frontend/app/worldmodel.js');
+const resident=WorldModel.deserialize(d);
+const assigned=result.placed.map((entry,i)=>resident.assignDesk(entry.deskId,'eyehold_worker_'+i));
+assert(assigned.every(a=>a&&a.ok),'six native workstation assignments succeed');
+const restored=WorldModel.deserialize(resident.serialize());
+assert.equal(restored.serialize().props.filter(p=>p.t==='desk'&&p.agentId&&p.agentId.startsWith('eyehold_worker_')).length,6,'six bindings persist after reloading station');
 const doc2=buildEyeholdStation().doc;
 assert(Number.isFinite(d.meta.createdAt)&&Number.isFinite(doc2.meta.createdAt),'creation timestamps recorded');
 const normalize=doc=>({...doc,meta:{...doc.meta,createdAt:0}});
