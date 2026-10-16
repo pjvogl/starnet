@@ -39,7 +39,9 @@ jobs:
           node test/eyehold-acceptance-store.test.js
       - name: Readiness report
         run: |
-          echo '## Backend launch readiness — offline checks passed' >> "$GITHUB_STEP_SUMMARY"
-          echo 'The canonical WorldModel, staffing UI, run store and fail-closed owner-review tests passed.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Not yet verified: interactive browser use, provider connectivity in the user's deployment, paid two-worker job, external accounts, real financial data, commercial profit.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'This is a manual, no-model-spend test and does not launch the game.' >> "$GITHUB_STEP_SUMMARY"
+          {
+            printf '%s\n' '## Backend launch readiness — offline checks passed'
+            printf '%s\n' 'The canonical WorldModel, staffing UI, run store and fail-closed owner-review tests passed.'
+            printf '%s\n' "Not yet verified: interactive browser use, provider connectivity in the user's deployment, paid two-worker job, external accounts, real financial data, commercial profit."
+            printf '%s\n' 'This is a manual, no-model-spend test and does not launch the game.'
+          } >> "$GITHUB_STEP_SUMMARY"
