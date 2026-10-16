@@ -15,7 +15,7 @@
    const room=rooms.find(r=>r.kind!=='corridor'&&String(r.name||'').startsWith(prefix));
    if(!room)throw Error('missing physical room for '+department);
    const rect=(room.rects||[])[0];if(!rect)throw Error('missing geometry '+department);
-   const centerX=Math.floor((rect.x1+rect.x2)/2),y=rect.y1+2;
+   const centerX=Math.floor((rect.x1+rect.x2)/2),y=rect.y1+2+([1000000,10000000,100000000].indexOf(tier));
    return {department,tier,t:PROPS[tier],x:centerX,y,w:1,h:1};
   });
  }
@@ -24,8 +24,12 @@
    throw Error('Trusted milestone attestation required; agents and client UI cannot self-award');
   if(!station||typeof station.addProp!=='function'||typeof station.serialize!=='function')throw Error('native station required');
   const planned=plan(station,tier),results=[];
+  const existing=station.serialize().props||[];
   for(const item of planned){
    // Do not modify any occupied tile or overwrite player layout.
+   if(existing.some(p=>p.t===item.t&&p.x===item.x&&p.y===item.y)){
+    results.push({department:item.department,ok:true,alreadyPresent:true});continue;
+   }
    const result=station.addProp({t:item.t,x:item.x,y:item.y,w:item.w,h:item.h,block:false});
    results.push({department:item.department,ok:!!result?.ok,error:result?.error||null,propId:result?.id||null});
   }
