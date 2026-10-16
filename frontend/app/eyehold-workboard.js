@@ -25,7 +25,7 @@
   const detailBody=document.createElement('pre');detailBody.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto';
   detail.append(detailHead,detailBody);
   const assign=document.createElement('button');assign.type='button';assign.textContent='ASSIGN WORK IN COMMS';assign.style.cssText='margin:0 8px 8px 0;background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
-  assign.addEventListener('click',()=>{board.hidden=true;toggle.setAttribute('aria-expanded','false');const target=document.querySelector('#chat-input, #chat-textarea, textarea[placeholder*=\"message\" i]');if(target){target.focus();status.textContent='Enter your assignment in COMMS. Nothing was sent automatically.';}else{status.textContent='Open COMMS to assign work; no job was started.';if(typeof StationUI!==\'undefined\'&&StationUI.openTerm)StationUI.openTerm(\'comms\');}});
+  assign.addEventListener('click',()=>{board.hidden=true;toggle.setAttribute('aria-expanded','false');const target=document.querySelector('#chat-input, #chat-textarea, textarea[placeholder*=\"message\" i]');if(target){target.focus();status.textContent='Enter your assignment in COMMS. Nothing was sent automatically.';}else{status.textContent='Open COMMS to assign work; no job was started.';if(typeof StationUI!=='undefined'&&StationUI.openTerm)StationUI.openTerm('comms');}});
   const departments=document.createElement('details');
   const deptHeading=document.createElement('summary');deptHeading.textContent='BUSINESS DEPARTMENTS — responsibilities and handoffs';
   departments.appendChild(deptHeading);
@@ -75,7 +75,7 @@
     });
     const hero=agents.find(a=>a.id==='agent');
     const command=hero&&rooms.some(r=>r.eyeTerritory==='keep');
-    coverage.textContent=(matched.length+(command?1:0))+' of 7 departments have a real agent and a suitable room; '+matched.length+' specialist workstations verified. A room's presence alone does not prove model activity.';
+    coverage.textContent=(matched.length+(command?1:0))+' of 7 departments have a real agent and a suitable room; '+matched.length+' specialist workstations verified. A room presence alone does not prove model activity.';
    }catch(e){coverage.textContent='Cannot verify staffing: '+e.message}
   });
   const teamTask=document.createElement('button');teamTask.type='button';teamTask.textContent='PREPARE RAVEN → DEEPFORGE TASK';
