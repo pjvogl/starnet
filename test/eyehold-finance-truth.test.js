@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {reportBusinessProfit}=require('../sidecar/eyehold-finance-truth.js');
+assert.deepEqual(reportBusinessProfit().netProfitUSD,null);
+assert.equal(reportBusinessProfit({records:[]}).status,'unavailable');
+assert.equal(reportBusinessProfit({records:[{type:'revenue',cents:99900,verified:false,evidenceRef:'invoice'}]}).netProfitUSD,null);
+assert.equal(reportBusinessProfit({records:[{type:'revenue',cents:99900,verified:true}]}).netProfitUSD,null);
+const r=reportBusinessProfit({records:[{type:'revenue',cents:12000,verified:true,evidenceRef:'paid-invoice:1'},{type:'model-cost',cents:250,verified:true,evidenceRef:'provider:1'},{type:'refund',cents:1500,verified:true,evidenceRef:'refund:1'}]});
+assert.equal(r.netProfitUSD,102.5);
+assert.equal(r.remainingUSD,999897.5);
+assert.match(r.scope,/not a reconciled bank/);
+console.log('Eyehold finance truth gate: unavailable stays unavailable; verified-record math correct');
