@@ -53,7 +53,7 @@ async function run(){
    const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});
    if(!res.ok)throw Error(worker.agentId+' lead run HTTP '+res.status);
    const reader=res.body.getReader(),dec=new TextDecoder();let b='';
-   while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\\n'))>=0){
+   while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){
     const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;
     let ev;try{ev=JSON.parse(line)}catch{continue}
     events.push(ev);
