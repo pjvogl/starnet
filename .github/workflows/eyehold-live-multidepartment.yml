@@ -20,6 +20,7 @@ jobs:
       SKYNET_OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       EYEHOLD_DELEGATION_MODEL: ${{ vars.EYEHOLD_DELEGATION_MODEL }}
       EYEHOLD_ASSIGNMENT: ${{ inputs.assignment }}
+      EYEHOLD_DELIVERABLE_DIR: ${{ github.workspace }}/eyehold-multidept-evidence
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,6 +35,16 @@ jobs:
       - name: Real supervisor to two specialists
         timeout-minutes: 5
         run: node test/eyehold-live-multidepartment.test.js
+      - name: Require distinct real specialist artifacts
+        run: |
+          test -s eyehold-multidept-evidence/raven-deliverable.md
+          test -s eyehold-multidept-evidence/deepforge-deliverable.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-research-and-production-proof
+          path: eyehold-multidept-evidence/
+          retention-days: 3
+          if-no-files-found: error
       - name: Scope and safety
         run: |
           echo '## Multi-specialist live delegation confirmed' >> "$GITHUB_STEP_SUMMARY"
