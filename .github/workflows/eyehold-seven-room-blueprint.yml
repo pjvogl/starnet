@@ -19,6 +19,9 @@ jobs:
         run: |
           node --check scripts/eyehold-seven-room-starter.cjs
           node test/eyehold-seven-room-starter.test.js
+          node --check frontend/app/eyehold-layout-install.js
+          node --check frontend/app/eyehold-staff-departments.js
+          node test/eyehold-activation-ui.test.js
       - name: Export opt-in room blueprint
         run: |
           mkdir -p eyehold-starter-layout
