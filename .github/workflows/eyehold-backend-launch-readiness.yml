@@ -1,0 +1,45 @@
+name: Eyehold - Backend launch readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Validate runtime code and service syntax
+        run: |
+          node --check sidecar/index.js
+          node --check frontend/app/eyehold-workboard.js
+          node --check frontend/app/eyehold-layout-install.js
+          node --check frontend/app/eyehold-staff-departments.js
+          node --check test/eyehold-live-multidepartment.test.js
+      - name: Verify physical rooms, desks, native app activation
+        run: |
+          node test/eyehold-seven-room-starter.test.js
+          node test/eyehold-activation-ui.test.js
+          node test/eyehold-departments.test.js
+          node test/eyehold-workboard.test.js
+      - name: Verify backend run persistence, delegation and owner review
+        run: |
+          node test/eyehold-launch-readiness.test.js
+          node test/eyehold-runstore-adapter.test.js
+          node test/eyehold-owner-review-http.test.js
+          node test/eyehold-crown-runtime.test.js
+          node test/eyehold-acceptance-store.test.js
+      - name: Readiness report
+        run: |
+          echo '## Backend launch readiness — offline checks passed' >> "$GITHUB_STEP_SUMMARY"
+          echo 'The canonical WorldModel, staffing UI, run store and fail-closed owner-review tests passed.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Not yet verified: interactive browser use, provider connectivity in the user's deployment, paid two-worker job, external accounts, real financial data, commercial profit.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This is a manual, no-model-spend test and does not launch the game.' >> "$GITHUB_STEP_SUMMARY"
