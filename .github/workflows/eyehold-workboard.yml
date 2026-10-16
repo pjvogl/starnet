@@ -1,0 +1,32 @@
+name: Eyehold - In-game work board check
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/harness-backend
+    paths:
+      - frontend/app/eyehold-workboard.js
+      - frontend/index.html
+      - test/eyehold-workboard.test.js
+
+permissions:
+  contents: read
+
+jobs:
+  workboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          node --check frontend/app/eyehold-workboard.js
+          node test/eyehold-workboard.test.js
+      - name: Explain scope
+        run: |
+          echo '## Eyehold in-game work board' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Static UI wiring and safe read-only rendering checks passed. No model calls or Crown awards.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'To watch actual agents move, open the running station on a computer hosting the sidecar; CI is not a persistent game server.' >> "$GITHUB_STEP_SUMMARY"
