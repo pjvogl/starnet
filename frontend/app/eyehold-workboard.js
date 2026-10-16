@@ -37,6 +37,23 @@
    const state=document.createElement('small');state.textContent='Role plan only — room/agent activation not yet verified; '+room.authority;
    section.append(label,note,state);departments.appendChild(section);
   }
+  const coverage=document.createElement('p');coverage.setAttribute('role','status');
+  coverage.textContent='Crew assignments not checked.';
+  departments.appendChild(coverage);
+  const crewCheck=document.createElement('button');crewCheck.type='button';crewCheck.textContent='CHECK LIVE CREW';crewCheck.style.cssText='margin:8px 0;background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
+  departments.appendChild(crewCheck);
+  crewCheck.addEventListener('click',async()=>{
+   coverage.textContent='Checking roster in this running sidecar…';
+   try{
+    const result=await fetch('/api/roster',{cache:'no-store'});
+    if(!result.ok)throw Error('roster unavailable: HTTP '+result.status);
+    const data=await result.json();
+    const agents=Array.isArray(data.agents)?data.agents:Array.isArray(data.roster)?data.roster:[];
+    const expected=(typeof EyeholdDepartments!=='undefined'&&EyeholdDepartments.rooms)||[];
+    const matches=expected.filter(room=>agents.some(agent=>agent.specialtyId===room.role));
+    coverage.textContent=matches.length+' of '+expected.length+' department specialties assigned in the live roster (roles can share a specialty). Room geometry and movement require a separate check.';
+   }catch(e){coverage.textContent='Cannot verify crew from this sidecar: '+e.message}
+  });
   board.append(heading,description,departments,assign,refresh,status,list,detail);
   document.body.append(toggle,board);
   let loading=false;
