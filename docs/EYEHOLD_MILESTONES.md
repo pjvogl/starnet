@@ -103,3 +103,9 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - Created `sidecar/eyehold-external-account-policy.js` and test. Only a default-deny policy module exists; it is NOT yet wired into actual third-party connector execution routes. Store creation, publishing, payouts and account linking require separately authenticated owner approval and a verified connector. No bank credentials, storefront accounts or payment accounts were connected or created.
 - Existing Treasury Watch finance truth calculations use provided evidence-marked records only; bank/payment processor reconciliation and actual net earnings remain unavailable.
 - A green rerun of consolidated readiness after these changes would verify only its specified offline contracts, not commercial/production readiness.
+
+## 2026-10-16 verified-profit ladder and cosmetic loot motivation
+- Financial ladder encoded in `sidecar/eyehold-finance-truth.js`: verified cumulative net USD profit at $1M → $10M → $100M, with next goal and completed milestones. Missing/unverified financial data does not advance it.
+- New `frontend/app/eyehold-room-loot.js` previews 21 distinct seven-department room decorations across the three tiers; Work Board now offers a *locked cosmetic preview*. No native props are installed and no real reward is issued from preview alone. Actual authenticated financial unlock + native WorldModel cosmetic placement remains to implement.
+- Eyehold specialist templates now explicitly present shared loot goals as desirable role-playing achievements to pursue through profitable, lawful, evidence-verified work; no permissions, costs, financial authority or actual motivational experience are created by these instructions. Existing agents may require a re-application of the updated specialty.
+- Manual backend readiness test includes milestone, motivation and finance-unavailability assertions. This latest extended gate has NOT been user-verified green.
