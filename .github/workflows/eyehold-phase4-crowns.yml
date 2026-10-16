@@ -2,11 +2,6 @@ name: Eyehold Phase 4 - Goal-aligned Crown verification
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feat/harness-backend
-    paths:
-      - .github/workflows/eyehold-phase4-crowns.yml
 
 permissions:
   contents: read
