@@ -5,6 +5,8 @@ const html=fs.readFileSync(path.join(dir,'frontend/index.html'),'utf8');
 const script=fs.readFileSync(path.join(dir,'frontend/app/eyehold-workboard.js'),'utf8');
 assert(html.includes('<script src="app/eyehold-workboard.js"></script>'));
 assert(script.includes('/api/runs?agent=*&limit=20'));
+assert(script.includes('/api/transcript?agent='),'selected run must load its persisted transcript');
+assert(script.includes("open.addEventListener('click',()=>showDetails(run))"),'run rows must be selectable');
 assert(script.includes('textContent='),'render untrusted run labels as text, never HTML');
 assert(!/innerHTML\s*=/.test(script),'never inject run content as HTML');
 assert(!/\.emit\(/.test(script),'read-only board cannot emit events');
