@@ -181,3 +181,24 @@ refund prevents new unlocks but does not delete placed furniture.
    provider execution, research-to-engineering context, and saved supervisor results.
 3. Inspect the deliverables before using them for customer work. External accounting
    connections, bespoke fantasy assets, and actual business income remain absent.
+
+## 2026-10-16 ordered completion: CI correction
+
+- Latest automatic Eyehold module run failed because it started the sidecar without
+  `npm ci`. The same wildcard also included paid live-proof entrypoints. Added the
+  dependency install and explicit paid-test exclusions; provider keys are blank and
+  spend caps zero for automatic offline execution.
+- Added a test-only loopback network preload inherited by spawned sidecars, and
+  disabled live price refresh in this gate. This blocks remote fetch/socket calls
+  (including the public startup catalog GET), rather than treating absent keys as
+  proof of no network traffic. The automatic approval review rejected the prior
+  broader batch over OpenRouter traffic; the loopback-only replacement completed.
+- Every offline Eyehold test in the corrected wildcard passed locally; paid proofs
+  were not run. The standalone distribution test also passed.
+- The public-distribution fixture now runs an isolated temporary configuration and
+  reserved `.invalid` URLs, without restoring an upstream update endpoint in the
+  real app. The real distribution gate now explicitly blocks absent/disabled owned
+  updater configuration. This is a successful test of a blocked release state, not
+  a signed or published release.
+- Pending: automatic GitHub checks on this correction, then manual browser readiness
+  and live two-department handoff before advancing to production owner review.

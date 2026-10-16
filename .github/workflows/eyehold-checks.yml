@@ -34,6 +34,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install runtime dependencies
+        run: npm ci
       - name: Syntax check modified Eyehold modules
         shell: bash
         run: |
@@ -41,11 +43,25 @@ jobs:
           for file in sidecar/eyehold-*.js frontend/app/eyehold-*.js test/eyehold-*.test.js; do
             node --check "$file"
           done
-      - name: Execute Eyehold unit tests
+      - name: Execute offline Eyehold tests (paid proofs are manual-only)
+        env:
+          SKYNET_OPENROUTER_KEY: ''
+          STARNET_OPENROUTER_KEY: ''
+          OPENROUTER_API_KEY: ''
+          SKYNET_BUDGET_GLOBAL: '0'
+          SKYNET_BUDGET_PER_DAY: '0'
+          SKYNET_LIVE_PRICES: '0'
+          NODE_OPTIONS: --require=${{ github.workspace }}/test/helpers/eyehold-loopback-only.cjs
         shell: bash
         run: |
           set -euo pipefail
           for file in test/eyehold-*.test.js; do
+            case "$file" in
+              test/eyehold-live-delegation.test.js|test/eyehold-live-multidepartment.test.js)
+                echo "Manual paid proof excluded: $file"
+                continue
+                ;;
+            esac
             echo "::group::$file"
             node "$file"
             echo "::endgroup::"

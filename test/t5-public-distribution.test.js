@@ -9,14 +9,14 @@ const os = require('node:os');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const script = path.join(ROOT, 'scripts', 't5-public-distribution.mjs');
+let script;
 const lint = path.join(ROOT, 'scripts', 'lint-evidence-secrets.mjs');
 const TAURI_CONF = JSON.parse(fs.readFileSync(path.join(ROOT, 'src-tauri', 'tauri.conf.json'), 'utf8'));
 const APP_VERSION = TAURI_CONF.version;
-// The updater endpoint is the single source of truth; the T5 hosting proof compares the
-// evidence's latestJsonUrl against it. Derive the installer asset URL from the same channel
-// so this fixture tracks the configured endpoint instead of hardcoding a dead host.
-const LATEST_JSON_URL = TAURI_CONF.plugins.updater.endpoints[0];
+// Isolated fixture configuration. A development fork may intentionally disable updates;
+// never restore the upstream update channel just to make a unit fixture green.
+// No requests are made to this reserved .invalid host.
+const LATEST_JSON_URL = 'https://eyeholddistribution.invalid/releases/latest/download/latest.json';
 const INSTALLER_URL = LATEST_JSON_URL.replace(/\/releases\/latest\/download\/latest\.json$/, '/releases/download/v' + APP_VERSION + '/StarNet_' + APP_VERSION + '_x64-setup.exe');
 
 function cleanEnv(extra) {
@@ -80,6 +80,18 @@ function proof(hash, bytes, version, overrides) {
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 't5-public-distribution-'));
 try {
+  const fixtureRoot = path.join(tmp, 'fixture-repo');
+  for (const relative of ['scripts/t5-public-distribution.mjs', 'scripts/lib/release-installer.mjs', 'docs/STARNET_T5_PUBLIC_DISTRIBUTION.md']) {
+    const dest = path.join(fixtureRoot, relative);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(path.join(ROOT, relative), dest);
+  }
+  const fixtureConfig = JSON.parse(JSON.stringify(TAURI_CONF));
+  fixtureConfig.plugins.updater.endpoints = [LATEST_JSON_URL];
+  fixtureConfig.bundle.createUpdaterArtifacts = true;
+  const configFile = path.join(fixtureRoot, 'src-tauri/tauri.conf.json');
+  writeJson(configFile, fixtureConfig);
+  script = path.join(fixtureRoot, 'scripts/t5-public-distribution.mjs');
   const installer = path.join(tmp, 'StarNet_' + APP_VERSION + '_x64-setup.exe');
   fs.writeFileSync(installer, 'fake installer');
   fs.writeFileSync(installer + '.sig', 'fake-updater-signature');
@@ -204,6 +216,23 @@ try {
     assert.ok(fs.existsSync(path.join(latest, 't5-public-distribution-status.json')), 'latest status should be copied');
     const lintRes = spawnSync(process.execPath, [lint, latest], { cwd: ROOT, encoding: 'utf8', env: cleanEnv() });
     assert.equal(lintRes.status, 0, lintRes.stderr || lintRes.stdout);
+  }
+  {
+    fixtureConfig.plugins.updater.endpoints = [];
+    fixtureConfig.bundle.createUpdaterArtifacts = false;
+    writeJson(configFile, fixtureConfig);
+    const out = path.join(tmp, 'disabled-updater-out');
+    const res = run(['--distribution-evidence', path.join(tmp, 'good-proof.json')], Object.assign({}, baseEnv, {
+      STARNET_T5_PUBLIC_DISTRIBUTION_DIR: out,
+      STARNET_T5_PUBLIC_DISTRIBUTION_LATEST_DIR: path.join(tmp, 'disabled-updater-latest')
+    }));
+    const got = JSON.parse(fs.readFileSync(path.join(out, 't5-public-distribution-status.json'), 'utf8'));
+    assert.equal(res.status, 2);
+    assert.equal(got.publicDistributionReady, false);
+    assert.match(got.results.find(r => r.id === 't5.2-signed-updater-artifacts').reason, /updater/i);
+    fixtureConfig.plugins.updater.endpoints = [LATEST_JSON_URL];
+    fixtureConfig.bundle.createUpdaterArtifacts = true;
+    writeJson(configFile, fixtureConfig);
   }
   /* ---- T5.1 MUST BIND ITS PREREQ VERDICTS TO THIS INSTALLER ---------------------------------------
      checkPrereqs read only verdict/ready booleans, and copyLatest() unconditionally re-stamps the `-latest`

@@ -222,6 +222,11 @@ function validateManifest(file, installerInfo, sigFile) {
   return { ok: errors.length === 0, errors, manifest: manifest || null };
 }
 function checkArtifacts(loop) {
+  const config = tauriConfig();
+  if (!hasHttpsUrl(updaterEndpoint()) || !config.bundle || config.bundle.createUpdaterArtifacts !== true) {
+    return step('t5.2-signed-updater-artifacts', 'T5.2', 'Signed updater artifacts and manifest are valid', 'blocked',
+      'Updater distribution is disabled or has no HTTPS endpoint. Configure and sign an owned update channel before public distribution.', { loop });
+  }
   const installer = fileInfo(installerPath());
   if (!installer) return step('t5.2-signed-updater-artifacts', 'T5.2', 'Signed updater artifacts and manifest are valid', 'blocked', 'Build the current NSIS installer first.', { loop, artifacts: { installer: null } });
   const sigFile = installer.path + '.sig';
