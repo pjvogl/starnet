@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'frontend/index.html'),'utf8');
+for(const name of ['eyehold-layout-install.js','eyehold-staff-departments.js'])assert(html.includes('app/'+name),'game must load '+name);
+const layout=fs.readFileSync(path.join(root,'frontend/app/eyehold-layout-install.js'),'utf8');
+const staffing=fs.readFileSync(path.join(root,'frontend/app/eyehold-staff-departments.js'),'utf8');
+assert(layout.includes('replaceLayout(candidate.doc)'));
+assert(layout.includes('eyehold-station-backup.json'));
+assert(layout.includes('rooms.length!==1'),'guard existing multiroom worlds');
+assert(layout.includes('window.confirm('),'explicit operator consent');
+assert(staffing.includes('App.summonAgent('),'real in-app agent creation');
+assert(staffing.includes('station.assignDesk('),'real workstation binding');
+assert(staffing.includes('App.pushRoster('),'push roster to live backend');
+assert(staffing.includes('rooms.length!==7'),'refuse invalid layout');
+assert(staffing.includes('window.confirm('),'explicit operator consent');
+assert(!/innerHTML\s*=/.test(layout+staffing),'avoid unsafe source interpolation');
+console.log('Eyehold native import/staffing UI safety and live API wiring contracts checked');
