@@ -21,4 +21,4 @@ const placed=restored.props.filter(p=>['plant','shelf','vault'].includes(p.t));
 assert(placed.length>=21,'all 21 real station cosmetics survive native WorldModel serialization');
 assert(saves>=3);
 console.log('PASS: all 21 real WorldModel room decorations persist and untrusted milestone calls fail closed');
-console.log('PENDING: production host attestation and native fantasy-specific art assets');
+console.log('PENDING: native fantasy-specific art assets; imported receipt-to-unlock path is covered by finance integration tests');

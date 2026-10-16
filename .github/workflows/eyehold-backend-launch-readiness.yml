@@ -38,6 +38,8 @@ jobs:
           node test/eyehold-crown-runtime.test.js
           node test/eyehold-acceptance-store.test.js
           node test/eyehold-finance-truth.test.js
+          node test/eyehold-finance-store.test.js
+          node test/eyehold-finance-http.test.js
           node test/eyehold-loot-milestones.test.js
           node test/eyehold-native-loot.test.js
           node test/eyehold-delegation-contract.test.js
@@ -45,6 +47,20 @@ jobs:
           node test/eyehold-external-account-policy.test.js
           node test/eyehold-seven-agent-restart.test.js
           node test/eyehold-workstream-recovery.test.js
+      - name: Install browser test driver (no provider credentials)
+        run: npm install --no-save --ignore-scripts playwright@1.62.1
+      - name: Verify real Work Board and Treasury in desktop and mobile viewports
+        env:
+          EYEHOLD_CHROME: /usr/bin/google-chrome
+        run: node scripts/qa/eyehold-ui-smoke.cjs eyehold-ui-evidence
+      - name: Save isolated UI fixture screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-ui-fixture-proof
+          path: eyehold-ui-evidence/
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Readiness report
         run: |
           {

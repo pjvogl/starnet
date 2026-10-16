@@ -13,7 +13,7 @@
   const board=document.createElement('section');
   board.id='eyehold-workboard';board.setAttribute('aria-label','Eyehold work board');
   board.hidden=true;
-  board.style.cssText='position:fixed;bottom:57px;right:18px;z-index:995;width:min(420px,calc(100vw - 36px));max-height:55vh;overflow:auto;padding:14px;border:1px solid #aa8d5c;border-radius:6px;background:#171518;color:#e7d8b8;font:13px/1.5 monospace;box-shadow:0 8px 35px #000b';
+  board.style.cssText='position:fixed;bottom:57px;right:18px;z-index:995;box-sizing:border-box;width:min(420px,calc(100vw - 36px));max-height:55vh;overflow:auto;padding:14px;border:1px solid #aa8d5c;border-radius:6px;background:#171518;color:#e7d8b8;font:13px/1.5 monospace;box-shadow:0 8px 35px #000b';
   const heading=document.createElement('h2');heading.textContent='THE EYE — WORK BOARD';heading.style.cssText='font:17px monospace;margin:0 0 8px';
   const description=document.createElement('p');description.textContent='Live sidecar run history. Finished work must still be reviewed; no Crowns are implied.';description.style.margin='0 0 9px';
   const status=document.createElement('p');status.textContent='Open to load real run records.';status.setAttribute('role','status');
@@ -118,24 +118,28 @@
     const response=await fetch('/api/runs?agent=*&limit=20',{cache:'no-store'});
     if(!response.ok)throw Error('Run history unavailable (HTTP '+response.status+')');
     const data=await response.json();const runs=Array.isArray(data.runs)?data.runs:[];
+    let active=null;
+    try{const live=await fetch('/api/state/snapshot',{cache:'no-store'});if(live.ok){const snapshot=await live.json();active=Array.isArray(snapshot.runs)?snapshot.runs.filter(r=>!r.internal):null;}}catch{}
     list.replaceChildren();
+    for(const run of active||[]){const li=document.createElement('li');li.textContent=String(run.agentId||'Agent')+' — RUNNING ['+String(run.runId||'').slice(0,80)+']';list.appendChild(li);}
     for(const run of runs.slice(0,20)){
      const li=document.createElement('li');
      const agent=String(run.agentId||'Unknown agent').slice(0,60);
      const name=String(run.title||run.deliveryText||run.runId||'Untitled run').replace(/\s+/g,' ').slice(0,100);
-     const outcome=run.reason==='done'?'Completed':run.reason?String(run.reason).slice(0,40):'Recorded';
-     const open=document.createElement('button');open.type='button';open.textContent=agent+' — '+name+' ['+outcome+']';
+     const outcome=run.reason==='done'?'Finished — review required':run.reason?String(run.reason).slice(0,40):'Recorded';
+     const open=document.createElement('button');open.type='button';open.textContent=agent+' — '+name+' ['+outcome+']'+(run.delegatedBy?' · delegated by '+String(run.delegatedBy).slice(0,60):'');
      open.style.cssText='background:none;color:#ead6ad;text-align:left;border:0;text-decoration:underline;cursor:pointer;font:inherit';
      open.addEventListener('click',()=>showDetails(run));li.appendChild(open);
      li.style.marginBottom='8px';list.appendChild(li);
     }
-    status.textContent=runs.length?runs.length+' recent run records; open existing sessions or OUTBOX to inspect content.':'No run records in this sidecar workspace yet.';
+    status.textContent=(active===null?'Live activity unavailable. ':active.length+' running. ')+(runs.length?runs.length+' recent run records; select a record to inspect its output.':'No completed run records in this workspace yet.');
    }catch(e){list.replaceChildren();status.textContent='Unable to load run history. Start or reconnect the local sidecar. '+e.message}
    finally{loading=false}
   }
   async function showDetails(run){
    detail.hidden=false;detailHead.textContent='WORK DETAIL — '+String(run.agentId||'Agent').slice(0,60);
    detailBody.textContent='Loading recorded output…';
+   if(typeof run.deliveryText==='string'&&run.deliveryText.trim()){detailBody.textContent=run.deliveryText.slice(0,30000);return;}
    const agent=String(run.agentId||'agent');const stream=String(run.streamId||'');
    if(!/^[A-Za-z0-9_-]{1,100}$/.test(stream)){detailBody.textContent='This run has no available transcript stream. Open its original session or OUTBOX to inspect work.';return}
    try{
@@ -144,7 +148,7 @@
     if(!response.ok)throw Error('Transcript unavailable (HTTP '+response.status+')');
     const data=await response.json();const turns=Array.isArray(data.turns)?data.turns:[];
     const messages=turns.filter(t=>t&&t.role==='assistant'&&typeof t.content==='string'&&t.content.trim());
-    detailBody.textContent=messages.length?messages.map(t=>t.content).join('\n\n').slice(0,30000):'No saved assistant output found for this run. It may be available in the original session or OUTBOX.';
+    detailBody.textContent=messages.length?'SESSION TRANSCRIPT — may include other runs in this session\n\n'+messages.map(t=>t.content).join('\n\n').slice(0,30000):'No saved assistant output found for this run. It may be available in the original session or OUTBOX.';
    }catch(e){detailBody.textContent='Unable to read this saved work: '+e.message}
   }
   toggle.addEventListener('click',()=>{board.hidden=!board.hidden;toggle.setAttribute('aria-expanded',String(!board.hidden));if(!board.hidden)load()});

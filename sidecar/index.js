@@ -2756,6 +2756,8 @@ function engineCredentialError(provider, what) {
 // notebook: a sibling of the fs jail. Holds NO secret (the key/tokens live elsewhere). The frontend keeps
 // localStorage as a fast cache and writes through here on every persist; on boot it pulls the newer of the two.
 const saveStore = makeSaveStore({ fs, pathMod: path, root: WORKSPACES, clock: { now: () => Date.now() } });
+// Sibling of agent FS jails; local operator imports only. API is read-only and uses the existing token gate.
+const eyeholdFinanceStore = require('./eyehold-finance-store.js').createFinanceStore({file:path.join(WORKSPACES,'eyehold-finance.json')});
 
 /* ---- Cortex M-mem.5b: post-run reflection -> Keep/Edit/Discard turn-in ----
    After a substantive browser run COMPLETES, one cheap aux-model call (the same seam summarize() uses)
@@ -11436,6 +11438,10 @@ const ROUTES = [
   { m: 'POST', exact: '/api/notebook/restore', h: handleNotebookRestore },
   { m: 'GET', prefix: '/api/notebook', h: serveNotebook },
   { m: 'POST', exact: '/api/save/recovery-ack', h: handleSaveRecoveryAck },
+  { m: 'GET', exact: '/api/eyehold/finance', h: (req,res) => {
+    res.writeHead(200, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
+    res.end(JSON.stringify(eyeholdFinanceStore.snapshot()));
+  } },
   { m: 'GET', prefix: '/api/save', h: serveSaveLoad },
   { m: 'POST', qsplit: '/api/save', h: handleSaveWrite },   // qsplit, not exact: the unload beacon carries ?ticket= (apiauth.ticketOk)
   { m: 'GET', prefix: '/api/insights', h: serveInsights },

@@ -17,4 +17,4 @@ for(const role of ['keep','foundry','moonleaf','forge','archive','roost','astral
  assert(prompt.includes('never justifies'),role+' missing safety protections');
 }
 console.log('PASS: verified profit tiers, seven-room preview catalog, shared agent loot motivation');
-console.log('PENDING: authenticated finance-driven unlock, native 3D props, and server-side cosmetic persistence');
+console.log('Financial import/host auth/native persistence are covered by finance integration tests; custom fantasy art remains planned');

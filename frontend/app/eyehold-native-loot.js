@@ -24,16 +24,19 @@
    throw Error('Trusted milestone attestation required; agents and client UI cannot self-award');
   if(!station||typeof station.addProp!=='function'||typeof station.serialize!=='function')throw Error('native station required');
   const planned=plan(station,tier),results=[];
+  let changed=false;
   const existing=station.serialize().props||[];
   for(const item of planned){
    // Do not modify any occupied tile or overwrite player layout.
-   if(existing.some(p=>p.t===item.t&&p.x===item.x&&p.y===item.y)){
+   const lootId='Eyehold:'+String(tier)+':'+item.department;
+   if(existing.some(p=>p.label===lootId||(!p.label&&p.t===item.t&&p.x===item.x&&p.y===item.y))){
     results.push({department:item.department,ok:true,alreadyPresent:true});continue;
    }
    const result=station.addProp({t:item.t,x:item.x,y:item.y,w:item.w,h:item.h,block:false});
+   if(result?.ok){changed=true;const prop=typeof station.props==='function'&&station.props().find(p=>p.id===result.id);if(prop)prop.label=lootId;}
    results.push({department:item.department,ok:!!result?.ok,error:result?.error||null,propId:result?.id||null});
   }
-  if(results.some(r=>r.ok)&&typeof persist==='function')persist();
+  if(changed&&typeof persist==='function')persist();
   return {tier,results,complete:results.every(r=>r.ok)};
  }
  return Object.freeze({plan,applyTrustedMilestone});

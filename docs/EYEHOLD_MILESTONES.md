@@ -114,3 +114,70 @@ The operator reported the composed Crown runtime CI green. `sidecar/index.js` is
 - **Root cause for zero events on paid handoff:** the sequential delegation test searched a literal backslash+n in JSON-lines instead of LF; therefore both supervisor rounds emitted zero parsed events, so consent was never handled and no worker runs could be observed. Fixed JS source delimiter in `test/eyehold-live-multidepartment.test.js`, and added `test/eyehold-live-stream-decoder.test.js` to manual free gate. Corrected workflow has NOT run green. Earlier second-worker failure still requires validation after parser fix.
 - Added `frontend/app/eyehold-native-loot.js` and loaded it in `frontend/index.html`. It uses real native WorldModel props at three distinct positions in all seven named rooms, persists station mutations, refuses absent verification callback, and avoids duplicates. New native integration test in manual offline gate. Uses native plant/shelf/vault stand-ins; custom dragon forge/throne/orrey 3D assets are **not** yet available and must not be claimed as rendered.
 - **Unlock/security remains incomplete:** native applicator is dormant until an authenticated, server-controlled financial evidence/attestation integration is added. A client-supplied callback is not itself a trustworthy financial approval and must never be mistaken for server attestation. No earnings, trophies, model budgets, bank credentials or economic permissions were changed by these commits.
+
+
+## 2026-10-16 continuation: live diagnostics, Treasury integration, and UI gate
+
+- Confirmed backend workflow run `38950434590` passed at commit `9250d8b9`.
+  The pasted zero-event failure predates the LF parsing correction already in that tree.
+- Strengthened the paid two-department proof: streaming UTF-8 decoder handles split
+  characters and a final line without LF; run errors, termination reasons, event counts,
+  and the summary are retained. Only `team.dispatch` consent is approved. Clean child
+  completion and supervisor output are required. Raven's saved research becomes
+  bounded, explicitly unreviewed context for Deepforge. Supervisor results are saved
+  beside worker deliverables. The charged workflow stays manual with existing budgets.
+  **No new paid live result has been observed in this continuation.**
+- Added host-only owner-reviewed receipt ingestion and authenticated read-only
+  `/api/eyehold/finance`. Each imported USD receipt has a unique ID, integer cents,
+  type and SHA-256 evidence digest. Duplicate IDs, non-USD records, malformed amounts,
+  arithmetic overflow, altered evidence and oversized batches fail closed.
+  Browser/agent HTTP cannot write financial records. This verifies the imported
+  evidence against its reviewed snapshot; it does **not** independently reconcile
+  a bank account, prove the receipts authentic, or establish completeness.
+- Treasury now installs earned native plant/shelf/vault markers in seven physical
+  rooms from the host's reviewed snapshot and uses the existing save mirror.
+  Stable cosmetic labels survive world migration, moves and reloads. Occupied
+  locations are left unchanged and reported for retry. No paid capabilities are
+  granted. The listed fantasy artwork is still planned; these are native markers.
+- Work Board shows actual active runs from the state snapshot alongside history,
+  identifies delegation parents, prefers each run's delivery text, and labels
+  session-wide transcript fallback. Its width now includes padding on mobile.
+- Focused local checks passed: decoder, delegation contract, finance arithmetic,
+  financial store, native props, milestone catalog, Work Board and activation
+  contracts, layout, session restore, seven-agent re-registration, and real
+  authenticated finance HTTP plus durable station save/restart. No model requests.
+- Actual browser execution is **pending**: the local Chromium download was truncated.
+  The manual backend readiness workflow now includes a real-app desktop/mobile
+  browser test with an isolated fixture ledger and zero model budget, using runner
+  Chrome. Fixture screenshots are uploaded as `eyehold-ui-fixture-proof`.
+  Synthetic fixture receipts never enter production financial state.
+- Automatic approval review rejected one broader local batch over possible provider
+  traffic. It was not bypassed. Focused offline checks and the credential-free local
+  finance HTTP check were used instead. The paid proof still runs only on explicit
+  manual launch in GitHub, where the existing secret remains.
+
+### Import reviewed financial evidence when actual receipts exist
+
+On the sidecar host, create one JSON export per reviewed receipt, with fields such
+as `{"id":"unique-source-id","currency":"USD","type":"revenue","cents":10000}`.
+Valid types: `revenue`, `expense`, `refund`, `fee`, `model-cost`. Non-revenue types
+are subtracted. Review authenticity, amounts, duplicate transactions, refunds,
+processor fees, and compute expenses before importing. A unique ID is scoped to
+this complete imported snapshot; the importer cannot detect two different IDs
+representing the same real transaction.
+
+Run `node scripts/eyehold-import-finance.cjs --workspace-root <actual-sidecar-workspace-root> --confirm-reviewed receipt1.json receipt2.json`.
+This **replaces** the full snapshot, rather than appending transactions. Keep the
+original evidence securely. Missing receipts mean missing coverage, not zero cost.
+Do not import the test fixtures as actual income. No real receipt was imported by
+this implementation task. Existing decorations are cosmetic; a later loss or
+refund prevents new unlocks but does not delete placed furniture.
+
+### Remaining validation
+
+1. Run **Eyehold - Backend launch readiness** on `feat/harness-backend` to exercise
+   the new browser gate and obtain fixture screenshots.
+2. Run **Eyehold - Live two department handoff** on that branch to validate real
+   provider execution, research-to-engineering context, and saved supervisor results.
+3. Inspect the deliverables before using them for customer work. External accounting
+   connections, bespoke fantasy assets, and actual business income remain absent.
