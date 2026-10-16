@@ -24,7 +24,9 @@
   const detailHead=document.createElement('h3');detailHead.textContent='WORK DETAIL';
   const detailBody=document.createElement('pre');detailBody.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto';
   detail.append(detailHead,detailBody);
-  board.append(heading,description,refresh,status,list,detail);
+  const assign=document.createElement('button');assign.type='button';assign.textContent='ASSIGN WORK IN COMMS';assign.style.cssText='margin:0 8px 8px 0;background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
+  assign.addEventListener('click',()=>{board.hidden=true;toggle.setAttribute('aria-expanded','false');const target=document.querySelector('#chat-input, #chat-textarea, textarea[placeholder*=\"message\" i]');if(target){target.focus();status.textContent='Enter your assignment in COMMS. Nothing was sent automatically.';}else{status.textContent='Open COMMS to assign work; no job was started.';if(typeof StationUI!==\'undefined\'&&StationUI.openTerm)StationUI.openTerm(\'comms\');}});
+  board.append(heading,description,assign,refresh,status,list,detail);
   document.body.append(toggle,board);
   let loading=false;
   async function load(){
