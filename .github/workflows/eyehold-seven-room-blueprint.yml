@@ -1,0 +1,40 @@
+name: Eyehold - Build seven room station blueprint
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seven-room-station:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify native world model construction
+        run: |
+          node --check scripts/eyehold-seven-room-starter.cjs
+          node test/eyehold-seven-room-starter.test.js
+      - name: Export opt-in room blueprint
+        run: |
+          mkdir -p eyehold-starter-layout
+          node -e "const fs=require('fs');const a=require('./scripts/eyehold-seven-room-starter.cjs').buildEyeholdStation();fs.writeFileSync('eyehold-starter-layout/seven-room-world.json',JSON.stringify(a.doc,null,2)+'\n');"
+          cat > eyehold-starter-layout/README.txt <<'EOF'
+          Seven-room WorldModel starter blueprint (new station only).
+          DO NOT overwrite an existing Eyehold station save.
+          This is a tested geometry/template asset, not a deployed game world.
+          Agent roster and workstations must be configured separately by the owner.
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-seven-room-starter-blueprint
+          path: eyehold-starter-layout/
+          if-no-files-found: error
+      - name: Summary
+        run: |
+          echo '## Eyehold native seven-room template' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Created a fresh station blueprint with seven department rooms and a common corridor using the canonical WorldModel. Existing saves unchanged. No API spending.' >> "$GITHUB_STEP_SUMMARY"
