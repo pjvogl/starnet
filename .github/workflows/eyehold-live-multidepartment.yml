@@ -33,8 +33,16 @@ jobs:
           test -n "$SKYNET_OPENROUTER_KEY"
           node --check test/eyehold-live-multidepartment.test.js
       - name: Real supervisor to two specialists
-        timeout-minutes: 5
+        timeout-minutes: 6
         run: node test/eyehold-live-multidepartment.test.js
+      - name: Save completed worker evidence even on partial timeout
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyehold-partial-worker-evidence
+          path: eyehold-multidept-evidence/
+          retention-days: 3
+          if-no-files-found: ignore
       - name: Require distinct real specialist artifacts
         run: |
           test -s eyehold-multidept-evidence/raven-deliverable.md
