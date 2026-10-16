@@ -6,6 +6,8 @@ const script=fs.readFileSync(path.join(dir,'frontend/app/eyehold-workboard.js'),
 assert(html.includes('<script src="app/eyehold-workboard.js"></script>'));
 assert(script.includes('/api/runs?agent=*&limit=20'));
 assert(script.includes('/api/transcript?agent='),'selected run must load its persisted transcript');
+assert(script.includes('ASSIGN WORK IN COMMS'),'task assignment is routed to the existing authenticated app');
+assert(script.includes('setInterval('),'visible panel updates from real backend');
 assert(script.includes("open.addEventListener('click',()=>showDetails(run))"),'run rows must be selectable');
 assert(script.includes('textContent='),'render untrusted run labels as text, never HTML');
 assert(!/innerHTML\s*=/.test(script),'never inject run content as HTML');
