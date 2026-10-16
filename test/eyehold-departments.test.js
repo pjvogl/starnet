@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const catalog=require('../frontend/app/eyehold-departments.js');
+assert.equal(catalog.rooms.length,7);
+assert.equal(new Set(catalog.rooms.map(x=>x.id)).size,7);
+for(const id of ['command','opportunities','strategy','operations','production','quality','finance'])assert(catalog.get(id));
+assert(catalog.get('finance').mission.includes('VERIFIED'));
+assert(catalog.get('operations').handoff.includes('explicit operator approval'));
+assert(catalog.get('opportunities').handoff.includes('cite sources'));
+assert(catalog.get('production').handoff.includes('operator acceptance'));
+const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8');
+const board=fs.readFileSync(path.join(__dirname,'../frontend/app/eyehold-workboard.js'),'utf8');
+assert(html.indexOf('app/eyehold-departments.js')<html.indexOf('app/eyehold-workboard.js'));
+assert(board.includes('BUSINESS DEPARTMENTS'));
+assert(board.includes('room/agent activation not yet verified'));
+assert(!board.includes('fetch(\'/api/payments'));
+console.log('Eyehold department handoff catalog and truthful work-board display verified');
