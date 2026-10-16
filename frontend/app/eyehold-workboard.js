@@ -54,16 +54,29 @@
   const crewCheck=document.createElement('button');crewCheck.type='button';crewCheck.textContent='CHECK LIVE CREW';crewCheck.style.cssText='margin:8px 0;background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
   departments.appendChild(crewCheck);
   crewCheck.addEventListener('click',async()=>{
-   coverage.textContent='Checking roster in this running sidecar…';
+   coverage.textContent='Checking actual roster and workstation assignments…';
    try{
-    const result=await fetch('/api/roster',{cache:'no-store'});
-    if(!result.ok)throw Error('roster unavailable: HTTP '+result.status);
-    const data=await result.json();
-    const agents=Array.isArray(data.agents)?data.agents:Array.isArray(data.roster)?data.roster:[];
-    const expected=(typeof EyeholdDepartments!=='undefined'&&EyeholdDepartments.rooms)||[];
-    const matches=expected.filter(room=>agents.some(agent=>agent.specialtyId===room.role));
-    coverage.textContent=matches.length+' of '+expected.length+' department specialties assigned in the live roster (roles can share a specialty). Room geometry and movement require a separate check.';
-   }catch(e){coverage.textContent='Cannot verify crew from this sidecar: '+e.message}
+    if(typeof App==='undefined'||typeof App.agents!=='function'||typeof App.station!=='function')throw Error('game not yet initialized');
+    const agents=App.agents(),station=App.station();
+    if(!station||typeof station.serialize!=='function')throw Error('station document missing');
+    const doc=station.serialize(),rooms=Object.values(doc.rooms||{}).filter(r=>r.kind!=='corridor');
+    const expected=[
+     ['RAVEN COURT','Raven Court','eyehold-archive'],
+     ['STAR SAGES','Star Sages','eyehold-astral'],
+     ['IRON HOST','Iron Host','eyehold-foundry'],
+     ['DEEPFORGE','Deepforge','eyehold-forge'],
+     ['SILVER BOUGH','Silver Bough','eyehold-moonleaf'],
+     ['TREASURY WATCH','Treasury Watch','eyehold-astral']];
+    const matched=expected.filter(([name,prefix,specialty])=>{
+     const agent=agents.find(a=>String(a.name||'').toUpperCase()===name&&a.specialtyId===specialty);
+     const room=rooms.find(r=>String(r.name||'').startsWith(prefix));
+     if(!agent||!room)return false;
+     return (doc.props||[]).some(p=>p.t==='desk'&&p.agentId===agent.id&&room.rects.some(q=>p.x>=q.x1&&p.x<=q.x2&&p.y>=q.y1&&p.y<=q.y2));
+    });
+    const hero=agents.find(a=>a.id==='agent');
+    const command=hero&&rooms.some(r=>r.eyeTerritory==='keep');
+    coverage.textContent=(matched.length+(command?1:0))+' of 7 departments have a real agent and a suitable room; '+matched.length+' specialist workstations verified. A room's presence alone does not prove model activity.';
+   }catch(e){coverage.textContent='Cannot verify staffing: '+e.message}
   });
   board.append(heading,description,departments,assign,refresh,status,list,detail);
   document.body.append(toggle,board);
