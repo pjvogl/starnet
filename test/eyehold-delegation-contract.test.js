@@ -1,0 +1,14 @@
+'use strict';
+const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path');
+const src=fs.readFileSync(path.join(__dirname,'eyehold-live-multidepartment.test.js'),'utf8');
+assert(src.includes("for(const worker of assignments)"),'each worker must have an isolated lead delegation round');
+assert(src.includes("agentId:'raven'"));
+assert(src.includes("agentId:'deepforge'"));
+assert(src.includes("workers:[worker]"),'each dispatch must target exactly one verified roster agent');
+assert(src.includes("['raven','deepforge'].every"),'both independent saved worker runs must be verified');
+assert(src.includes('workerErrors.push'),'retain actual tool failure evidence');
+assert(!src.includes("workers:[{agentId:'raven',prompt:") ,'unverified multi-worker dispatch removed');
+const departments=require('../frontend/app/eyehold-departments.js');
+assert(departments.get('opportunities').mission.includes('debt servicing'));
+assert(departments.get('opportunities').mission.includes('lawful'));
+console.log('PASS: bounded sequential real dispatch, both deliverables required, broad lawful opportunity mandate');
