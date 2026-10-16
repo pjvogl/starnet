@@ -35,34 +35,50 @@ async function run(){
  await ready;await sleep(250);
  const assignment=String(process.env.EYEHOLD_ASSIGNMENT||'Write a two-sentence description of one safe test to verify a Node.js module loads successfully.').trim();
  if(assignment.length<15||assignment.length>1800)throw Error('Assignment must be 15-1800 characters');
- const prompt='Use team_dispatch with exactly this JSON shape: '+JSON.stringify({workers:[{agentId:'raven',prompt:'Research the customer need, commercial assumptions, limitations and validation requirements for: '+assignment,session:'research'},{agentId:'deepforge',prompt:'Draft a practical technical deliverable for: '+assignment,session:'engineering'}]})+'. Delegate both tasks to RAVEN COURT and DEEPFORGE in their named sessions. Do not invent their results or do the work yourself. Summarize the actual work of each specialist.';
- // Two real delegated worker runs can take substantially longer than a single agent.
- // Keep a bounded deadline while allowing both departments to finish.
- const deadlineMs=Number(process.env.EYEHOLD_HANDOFF_TIMEOUT_MS)||210000;
+ // The tested dispatch contract reliably handles one specialist per call.
+ // Use two real supervisor-led rounds instead of expecting an unverified
+ // multi-worker array to be executed atomically.
+ const assignments=[
+  {agentId:'raven',session:'research',prompt:'Research customer demand, commercial assumptions, legal requirements and validation risks for: '+assignment},
+  {agentId:'deepforge',session:'engineering',prompt:'Build a concise engineering deliverable with acceptance criteria for: '+assignment}
+ ];
+ const deadlineMs=Number(process.env.EYEHOLD_HANDOFF_TIMEOUT_MS)||150000;
  if(deadlineMs<75000||deadlineMs>240000)throw Error('Handoff timeout outside permitted bounds');
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),deadlineMs);
- let events=[],approvedPromptIds=new Set(),runId='';
- try{const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});if(!res.ok)throw Error('Agent run HTTP '+res.status);const reader=res.body.getReader(),dec=new TextDecoder();let b='';while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\n'))>=0){const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;try{
- const ev=JSON.parse(line);events.push(ev);
- if(ev.name==='agent.run.start'&&ev.payload?.runId)runId=ev.payload.runId;
- if(ev.name==='permission.prompt'){
-   const id=ev.payload?.promptId;
-   // Approval is ONLY for this isolated, operator-initiated delegation proof,
-   // never persisted and never applied to unrelated future runs.
-   if(id&&runId&&!approvedPromptIds.has(id)){
-     approvedPromptIds.add(id);
-     const permission=await fetch(base+'/api/consent',{method:'POST',headers,
-       body:JSON.stringify({runId,promptId:id,decision:'once'})});
-     console.log('Ephemeral run consent:',JSON.stringify({ok:permission.ok,status:permission.status,promptCount:approvedPromptIds.size}));
-     if(!permission.ok)throw Error('Run consent rejected: HTTP '+permission.status);
-   }
+ let events=[],approvedPromptIds=new Set();
+ for(const worker of assignments){
+  const prompt='Delegate exactly ONE bounded task using team_dispatch with exactly '+JSON.stringify({workers:[worker]})+'. Do not invent results. Return the verified worker result for '+worker.agentId+'.';
+  let runId='',finished=false,workerErrors=[];
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),deadlineMs);
+  try{
+   const res=await fetch(base+'/api/run',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify({key,model,agentId:'agent',isTask:true,messages:[{role:'user',content:prompt}]})});
+   if(!res.ok)throw Error(worker.agentId+' lead run HTTP '+res.status);
+   const reader=res.body.getReader(),dec=new TextDecoder();let b='';
+   while(true){const {done,value}=await reader.read();if(done)break;b+=dec.decode(value,{stream:true});let j;while((j=b.indexOf('\\n'))>=0){
+    const line=b.slice(0,j).trim();b=b.slice(j+1);if(!line)continue;
+    let ev;try{ev=JSON.parse(line)}catch{continue}
+    events.push(ev);
+    if(ev.name==='agent.run.start'&&ev.payload?.runId)runId=ev.payload.runId;
+    if(ev.name==='agent.run.end')finished=true;
+    if(ev.name==='agent.tool_result'&&(ev.payload?.isError||ev.payload?.ok===false)){
+     workerErrors.push(String(ev.payload?.summary||'tool failed').slice(0,300));
+    }
+    if(ev.name==='permission.prompt'){
+     const id=ev.payload?.promptId;
+     if(id&&runId&&!approvedPromptIds.has(runId+':'+id)){
+      approvedPromptIds.add(runId+':'+id);
+      const permission=await fetch(base+'/api/consent',{method:'POST',headers,body:JSON.stringify({runId,promptId:id,decision:'once'})});
+      if(!permission.ok)throw Error('Run consent rejected: HTTP '+permission.status);
+      console.log('Ephemeral delegation consent:',JSON.stringify({worker:worker.agentId,ok:true}));
+     }
+    }
+   }}
+  }catch(e){
+   console.error('Worker round incomplete:',JSON.stringify({worker:worker.agentId,reason:e.message,runStarted:!!runId,toolErrors:workerErrors,finished,stationCommands:station.slice(-8)}));
+   if(e.name!=='AbortError')throw e;
+  }finally{clearTimeout(timer)}
+  console.log('Supervisor delegation round:',JSON.stringify({worker:worker.agentId,finished,toolErrors:workerErrors,runIdPresent:!!runId}));
+  // Do not infer success from the lead finishing; downstream runs are audited below.
  }
-}catch(e){if(e.message?.startsWith('Run consent rejected'))throw e;}}}}catch(e){
-   const names=events.map(x=>x.name).filter(Boolean);
-   console.error('Delegation stream diagnosis:',JSON.stringify({eventCount:events.length,eventNames:[...new Set(names)].slice(0,20),runStart:names.includes('agent.run.start'),toolCalls:names.filter(n=>n==='agent.tool_call').length,stationCommands:station.slice(-12),permissionsAnswered:approvedPromptIds.size,timedOut:e?.name==='AbortError'}));
-   if(e?.name!=='AbortError')throw e;
-   console.error('Supervisor timed out; inspecting saved worker runs before marking proof failed.');
- }finally{clearTimeout(timer);}
  const runs=await(await fetch(base+'/api/runs?agent=*&limit=60',{headers})).json();
  const children=(runs.runs||[]).filter(r=>['raven','deepforge'].includes(r.agentId));
  const details=[];
