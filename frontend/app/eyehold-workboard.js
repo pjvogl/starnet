@@ -92,6 +92,12 @@
      {agentId:engineer.id,session:'engineering',prompt:'Prepare one customer-ready Node.js release-readiness service template with measurable go/no-go criteria, release rollback triggers, evidence fields and a pricing-cost worksheet with unknown numbers left blank. Do not claim deployment or sales.'}
     ];
     const msg='The Eye: coordinate one bounded commercial pilot research-and-production task. Use team_dispatch with workers exactly '+JSON.stringify(workers)+'. Ensure each named session exists or request a session before attempting delivery. Summarize the real worker outputs, evidence gaps, approval requirements and actual costs if known. Do not create accounts, spend money beyond configured model budgets, or award Crowns.';
+    if(typeof Workstreams==='undefined'||typeof Workstreams.all!=='function'||typeof Workstreams.create!=='function')throw Error('workstream registry unavailable');
+    for(const w of workers){
+     const existing=Workstreams.all().find(x=>x.agentId===w.agentId&&String(x.title||'').toLowerCase()===w.session);
+     if(!existing)Workstreams.create(w.session,{agentId:w.agentId,activate:false});
+    }
+    if(typeof App.persist==='function')App.persist();
     if(App.selectAgent('agent')===false)throw Error('Unable to select The Eye');
     const input=document.getElementById('chat-input');if(!input)throw Error('COMMS composer unavailable');
     input.value=msg;input.dispatchEvent(new Event('input',{bubbles:true}));
