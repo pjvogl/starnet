@@ -10,5 +10,7 @@ assert(result.placed.length===6);
 assert.equal(d.rooms[result.homeId].name,'The Eye - Command Keep');
 assert(d.props.some(p=>p.t==='desk'),'preserve original work desk');
 const doc2=buildEyeholdStation().doc;
-assert.deepEqual(d,doc2,'repeatable non-random starter blueprint');
+assert(Number.isFinite(d.meta.createdAt)&&Number.isFinite(doc2.meta.createdAt),'creation timestamps recorded');
+const normalize=doc=>({...doc,meta:{...doc.meta,createdAt:0}});
+assert.deepEqual(normalize(d),normalize(doc2),'repeatable room geometry and content except legitimate creation time');
 console.log('Seven native WorldModel rooms + central hall + territories built deterministically.');
