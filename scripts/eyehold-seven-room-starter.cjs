@@ -29,7 +29,9 @@ function buildEyeholdStation(){
   if(!result.ok)throw Error('room '+name+': '+result.error);
   const label=station.setRoomTerritory(result.id,territory);
   if(!label.ok)throw Error('room territory '+name+': '+label.error);
-  placed.push({name,id:result.id,territory});
+  const workstation=station.addProp({t:'desk',x:x+2,y:-10,w:2,h:1});
+  if(!workstation.ok)throw Error('workstation '+name+': '+workstation.error);
+  placed.push({name,id:result.id,territory,deskId:workstation.id});
  });
  return {doc:station.serialize(),placed,homeId,corridorId:corridor.id};
 }
