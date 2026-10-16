@@ -78,7 +78,28 @@
     coverage.textContent=(matched.length+(command?1:0))+' of 7 departments have a real agent and a suitable room; '+matched.length+' specialist workstations verified. A room's presence alone does not prove model activity.';
    }catch(e){coverage.textContent='Cannot verify staffing: '+e.message}
   });
-  board.append(heading,description,departments,assign,refresh,status,list,detail);
+  const teamTask=document.createElement('button');teamTask.type='button';teamTask.textContent='PREPARE RAVEN → DEEPFORGE TASK';
+  teamTask.style.cssText='margin:0 8px 8px 0;background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
+  teamTask.addEventListener('click',()=>{
+   try{
+    if(typeof App==='undefined'||typeof App.agents!=='function'||typeof App.selectAgent!=='function')throw Error('live roster not available');
+    const list=App.agents();
+    const researcher=list.find(a=>a.specialtyId==='eyehold-archive'&&String(a.name||'').toUpperCase()==='RAVEN COURT');
+    const engineer=list.find(a=>a.specialtyId==='eyehold-forge'&&String(a.name||'').toUpperCase()==='DEEPFORGE');
+    if(!researcher||!engineer)throw Error('Staff Raven Court and Deepforge first');
+    const workers=[
+     {agentId:researcher.id,session:'research',prompt:'Research customer demand for a small, legitimate Node.js release-readiness service. Identify buyers, relevant evidence, cost risks, alternatives and unresolved assumptions. Do not fabricate sources, create accounts or contact anybody.'},
+     {agentId:engineer.id,session:'engineering',prompt:'Prepare one customer-ready Node.js release-readiness service template with measurable go/no-go criteria, release rollback triggers, evidence fields and a pricing-cost worksheet with unknown numbers left blank. Do not claim deployment or sales.'}
+    ];
+    const msg='The Eye: coordinate one bounded commercial pilot research-and-production task. Use team_dispatch with workers exactly '+JSON.stringify(workers)+'. Ensure each named session exists or request a session before attempting delivery. Summarize the real worker outputs, evidence gaps, approval requirements and actual costs if known. Do not create accounts, spend money beyond configured model budgets, or award Crowns.';
+    if(App.selectAgent('agent')===false)throw Error('Unable to select The Eye');
+    const input=document.getElementById('chat-input');if(!input)throw Error('COMMS composer unavailable');
+    input.value=msg;input.dispatchEvent(new Event('input',{bubbles:true}));
+    board.hidden=true;toggle.setAttribute('aria-expanded','false');
+    input.focus();
+   }catch(e){status.textContent='Cannot prepare joint assignment: '+e.message}
+  });
+  board.append(heading,description,departments,assign,teamTask,refresh,status,list,detail);
   document.body.append(toggle,board);
   let loading=false;
   // Reflect actual live sidecar records while this panel is visible.
