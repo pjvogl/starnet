@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {buildEyeholdStation}=require('../scripts/eyehold-seven-room-starter.cjs');
+const result=buildEyeholdStation();
+const d=result.doc,rooms=Object.values(d.rooms);
+assert.equal(rooms.filter(r=>r.kind!=='corridor').length,7);
+assert.equal(rooms.filter(r=>r.kind==='corridor').length,1);
+assert.deepEqual(rooms.filter(r=>r.kind!=='corridor').map(r=>r.eyeTerritory).sort(),['archive','astral','astral','forge','foundry','keep','moonleaf'].sort());
+assert(result.placed.length===6);
+assert.equal(d.rooms[result.homeId].name,'The Eye - Command Keep');
+assert(d.props.some(p=>p.t==='desk'),'preserve original work desk');
+const doc2=buildEyeholdStation().doc;
+assert.deepEqual(d,doc2,'repeatable non-random starter blueprint');
+console.log('Seven native WorldModel rooms + central hall + territories built deterministically.');
