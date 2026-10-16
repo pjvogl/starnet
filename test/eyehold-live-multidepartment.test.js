@@ -18,7 +18,7 @@ async function run(){
  await wait();const token=await bootToken(base,base);
  const headers={'Content-Type':'application/json','X-StarNet-Token':token,Origin:base};
  const roster=await fetch(base+'/api/roster',{method:'POST',headers,body:JSON.stringify({agents:[
-  {agentId:'agent',name:'THE EYE',model,provider:'openrouter',system:'You are The Eye, supervisor. Delegate the specified engineering task to DEEPFORGE using team_dispatch with workers:[{agentId:"deepforge",prompt:"...",session:"engineering"}]. The session property is mandatory. Do not claim a result unless its worker run completed.'},
+  {agentId:'agent',name:'THE EYE',model,provider:'openrouter',system:'You are The Eye, supervisor. Delegate the requested assignment to BOTH RAVEN COURT (research session) and DEEPFORGE (engineering session) using team_dispatch with workers. The session property is mandatory for each worker. Do not claim a result unless its worker run completed.'},
   {agentId:'deepforge',name:'DEEPFORGE',model,provider:'openrouter',specialtyId:'eyehold-forge',system:'Deepforge engineer. Answer the delegated technical task concisely; check the research context provided by the lead.'},
   {agentId:'raven',name:'RAVEN COURT',model,provider:'openrouter',specialtyId:'eyehold-archive',system:'Raven Court researcher. Produce a concise evidence-aware opportunity assessment. Avoid unsupported figures and invented citations.'}
  ],updatedAt:Date.now()})});if(!roster.ok)throw Error('Roster rejected: HTTP '+roster.status);
