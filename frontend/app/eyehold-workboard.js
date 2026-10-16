@@ -37,6 +37,17 @@
    const state=document.createElement('small');state.textContent='Role plan only — room/agent activation not yet verified; '+room.authority;
    section.append(label,note,state);departments.appendChild(section);
   }
+  const buildGuide=document.createElement('details');
+  const buildSummary=document.createElement('summary');buildSummary.textContent='BUILD THE SEVEN PHYSICAL ROOMS';
+  buildGuide.appendChild(buildSummary);
+  const guideIntro=document.createElement('p');guideIntro.textContent='Use the existing BUILD MODE to place and connect real rooms. The plan never creates geometry or agents automatically.';
+  buildGuide.appendChild(guideIntro);
+  const roomPlan=(typeof EyeholdRoomPlan!=='undefined'&&EyeholdRoomPlan.plan)||[];
+  for(const step of roomPlan){
+   const item=document.createElement('p');item.textContent=step.instruction+' Room type: '+step.kind+'. Territory: '+step.territory+'.';
+   buildGuide.appendChild(item);
+  }
+  departments.appendChild(buildGuide);
   const coverage=document.createElement('p');coverage.setAttribute('role','status');
   coverage.textContent='Crew assignments not checked.';
   departments.appendChild(coverage);
