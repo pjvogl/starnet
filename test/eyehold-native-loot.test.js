@@ -17,7 +17,7 @@ for(const tier of [1000000,10000000,100000000]){
  assert(repeat.results.every(x=>x.alreadyPresent),'repeated confirmation does not duplicate props');
 }
 const restored=WorldModel.deserialize(station.serialize()).serialize();
-const placed=restored.props.filter(p=>['rug','plant','lamp'].includes(p.t));
+const placed=restored.props.filter(p=>['plant','shelf','vault'].includes(p.t));
 assert(placed.length>=21,'all 21 real station cosmetics survive native WorldModel serialization');
 assert(saves>=3);
 console.log('PASS: all 21 real WorldModel room decorations persist and untrusted milestone calls fail closed');
