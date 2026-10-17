@@ -10,7 +10,10 @@ const Updates = (() => {
   // ALL user data (workspaces live in Application Support; localStorage/IndexedDB in the WebView
   // store keyed by the unchanged bundle id — both OUTSIDE the app bundle the installer replaces).
   // Kept in sync with tauri.conf.json plugins.updater.endpoints[0] (same repo, /releases/latest).
-  const RELEASES_PAGE = 'https://github.com/androoAGI/starnet-releases/releases/latest';
+  // Eyehold distribution has not configured an independently signed updater.
+  // Keep all update operations fail-closed instead of following upstream releases.
+  const EYEHOLD_UPDATES_ENABLED = false;
+  const RELEASES_PAGE = null;
   const CORE = (typeof UpdateCore !== 'undefined') ? UpdateCore : null;
   const TAURI = (typeof window !== 'undefined' && window.__TAURI__ && window.__TAURI__.core) ? window.__TAURI__.core : null;
   const invoke = (cmd, args) => TAURI.invoke(cmd, args || {});
@@ -75,11 +78,13 @@ const Updates = (() => {
     opts = opts || {};
     notify = typeof opts.notify === 'function' ? opts.notify : notify;
     rerender = typeof opts.rerender === 'function' ? opts.rerender : rerender;
+    if (!EYEHOLD_UPDATES_ENABLED) { state.phase = 'unsupported'; state.desktop = false; emit(); return; }
     await refreshStatus();
     runLoop('startup');
   }
 
   async function refreshStatus() {
+    if (!EYEHOLD_UPDATES_ENABLED) { state.phase = 'unsupported'; state.desktop = false; emit(); return snapshot(); }
     if (!TAURI || !CORE) {
       state.desktop = false;
       state.phase = 'unsupported';
@@ -107,6 +112,7 @@ const Updates = (() => {
   }
 
   function schedule() {
+    if (!EYEHOLD_UPDATES_ENABLED) return;
     clearTimeout(timer);
     if (!CORE) return;
     const now = Date.now();
@@ -124,6 +130,7 @@ const Updates = (() => {
   }
 
   function runLoop(reason) {
+    if (!EYEHOLD_UPDATES_ENABLED) return;
     if (!CORE) return;
     const action = CORE.nextAction({
       settings: prefs,
@@ -138,6 +145,7 @@ const Updates = (() => {
   }
 
   async function check(manual, reason) {
+    if (!EYEHOLD_UPDATES_ENABLED) return snapshot();
     if (!TAURI || !CORE || busy) return snapshot();
     busy = true;
     state.phase = 'checking';
@@ -152,13 +160,13 @@ const Updates = (() => {
         state.update = r.update;
         state.phase = 'available';
         if (CORE.shouldNotify(prefs, r.update.version, Date.now(), !!r.update.critical)) {
-          notify((r.update.critical ? 'Critical update' : 'StarNet update') + ' v' + r.update.version + ' is ready in Update Center', r.update.critical ? 'warn' : 'gold', undefined, { kind: r.update.critical ? 'alert' : 'result', key: 'update-ready', go: { term: 'updates' } });
+          notify((r.update.critical ? 'Critical update' : 'The Eyehold update') + ' v' + r.update.version + ' is ready in Update Center', r.update.critical ? 'warn' : 'gold', undefined, { kind: r.update.critical ? 'alert' : 'result', key: 'update-ready', go: { term: 'updates' } });
           prefs = CORE.recordNotified(prefs, r.update.version);
         }
       } else {
         state.update = null;
         state.phase = 'current';
-        if (manual) notify('StarNet is up to date', 'good');
+        if (manual) notify('The Eyehold is up to date', 'good');
       }
       savePrefs();
     } catch (e) {
@@ -251,9 +259,10 @@ const Updates = (() => {
   }
 
   async function install(opts) {
+    if (!EYEHOLD_UPDATES_ENABLED) return snapshot();
     opts = opts || {};
     if (!TAURI || !CORE || busy || !state.update) {
-      notify('No StarNet update is ready to install', 'warn');
+      notify('No Eyehold update is ready to install', 'warn');
       return snapshot();
     }
     const Channel = TAURI.Channel;
@@ -286,7 +295,7 @@ const Updates = (() => {
     const drained = await preInstallDrain();
     if (!drained.ok) {
       state.phase = 'available';
-      state.error = 'State could not be verified on disk. The update was not installed; your current StarNet remains open.';
+      state.error = 'State could not be verified on disk. The update was not installed; your current Eyehold remains open.';
       busy = false;
       notify('Update paused - state verification failed', 'warn');
       emit();
@@ -318,7 +327,7 @@ const Updates = (() => {
     try {
       await invoke('starnet_update_install', { onEvent });
       state.phase = 'restarting';
-      notify('StarNet update installed - restarting', 'good');
+      notify('Eyehold update installed - restarting', 'good');
     } catch (e) {
       installing = false;   // install failed; the app lives on, so the quit guard resumes normally
       let thawError = null;
@@ -372,7 +381,7 @@ const Updates = (() => {
     savePrefs();
     state.update = null;
     state.phase = 'idle';
-    notify('StarNet v' + prefs.ignoredVersion + ' will be skipped', 'warn');
+    notify('Eyehold v' + prefs.ignoredVersion + ' will be skipped', 'warn');
     schedule();
     emit();
   }
@@ -391,6 +400,7 @@ const Updates = (() => {
   }
 
   function settingsHtml() {
+    if (!EYEHOLD_UPDATES_ENABLED) return '<h4 class="ms-h">UPDATES</h4><div class="up-mini">The Eyehold updates are unavailable until independent signing and distribution are configured.</div>';
     const auto = prefs.autoCheck !== false;
     return '<h4 class="ms-h">UPDATES</h4>' +
       '<div class="up-mini">' +
@@ -417,8 +427,9 @@ const Updates = (() => {
   }
 
   function html() {
+    if (!EYEHOLD_UPDATES_ENABLED) return '<div class="fb-empty">THE EYEHOLD AUTO-UPDATES ARE NOT CONFIGURED.<br><span>No independently signed Eyehold release feed is available.</span></div>';
     if (!TAURI) {
-      return '<div class="fb-empty">DESKTOP UPDATES ARE AVAILABLE IN THE PACKAGED STARNET APP.<br><span>This browser preview cannot install native releases.</span></div>';
+      return '<div class="fb-empty">DESKTOP UPDATES ARE AVAILABLE IN THE PACKAGED EYEHOLD APP.<br><span>This browser preview cannot install native releases.</span></div>';
     }
     const update = state.update;
     const pct = CORE.progress(state.downloaded, state.contentLength);
@@ -439,7 +450,7 @@ const Updates = (() => {
         // Channels-confirmed, and the choice is the Commander's, not a side effect.
         out += '<div class="up-guard">' +
           esc(guardN === 1 ? '1 AGENT IS STILL WORKING' : guardN + ' AGENTS ARE STILL WORKING') +
-          ' - INSTALLING RESTARTS STARNET AND KILLS ' + (guardN === 1 ? 'ITS RUN' : 'THEIR RUNS') + '.</div>' +
+          ' - INSTALLING RESTARTS THE EYEHOLD AND INTERRUPTS ' + (guardN === 1 ? 'ITS RUN' : 'THEIR RUNS') + '.</div>' +
           '<div class="up-actions">' +
           '<button class="bb sm" id="up-guard-wait">WAIT FOR AGENTS</button>' +
           '<button class="bb sm danger" id="up-install-force" ' + (busy ? 'disabled' : '') + '>INSTALL ANYWAY</button>' +
@@ -450,7 +461,7 @@ const Updates = (() => {
           (update.critical ? '' : '<button class="bb sm danger" id="up-ignore">SKIP VERSION</button>') + '</div></div>';
       }
     } else {
-      out += '<div class="up-empty">No update is pending. StarNet will keep checking in the background while automatic checks are on.</div>';
+      out += '<div class="up-empty">No update is pending. The Eyehold will keep checking in the background while automatic checks are on.</div>';
     }
     if (state.phase === 'preparing' || state.phase === 'downloading' || state.phase === 'installing' || state.phase === 'restarting') {
       out += '<div class="up-progress"><div style="width:' + pct + '%"></div></div>' +
@@ -470,6 +481,7 @@ const Updates = (() => {
 
   // Open the releases page in the system browser — same invoke-with-fallback pattern app.js uses.
   function openReleasesPage() {
+    if (!EYEHOLD_UPDATES_ENABLED || !RELEASES_PAGE) return;
     try {
       if (TAURI && typeof TAURI.invoke === 'function') {
         TAURI.invoke('open_external_url', { url: RELEASES_PAGE }).catch(() => {

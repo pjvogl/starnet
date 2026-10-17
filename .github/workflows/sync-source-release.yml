@@ -6,8 +6,6 @@ name: sync-source-release
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "7,22,37,52 * * * *"
 
 permissions:
   contents: write
@@ -22,10 +20,14 @@ jobs:
     timeout-minutes: 30
     env:
       GH_TOKEN: ${{ github.token }}
-      DISTRIBUTION_REPO: androoAGI/starnet-releases
+      DISTRIBUTION_REPO: ${{ vars.EYEHOLD_RELEASE_REPOSITORY }}
+      EYEHOLD_RELEASE_REPOSITORY: ${{ vars.EYEHOLD_RELEASE_REPOSITORY }}
       SOURCE_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Require owned Eyehold distribution before any mirror request
+        run: node scripts/eyehold/release-target.cjs
 
       - name: Read the latest published distribution release
         shell: bash

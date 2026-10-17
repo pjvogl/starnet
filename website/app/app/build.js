@@ -5296,6 +5296,38 @@ const Build = (() => {
     nameEl.onblur = saveName;
     const actions = host.querySelector('.refit-selection-actions');
     const key = (label, k, fn, cls) => { const el = document.createElement('button'); el.className = 'bb sm refit-sel-act' + (cls ? ' ' + cls : ''); el.type = 'button'; el.innerHTML = '<span>' + esc(label) + '</span>' + (k ? '<kbd>' + esc(k) + '</kbd>' : ''); el.onclick = fn; actions.appendChild(el); return el; };
+    // THE EYEHOLD: territory is a presentation-only property on the canonical room.
+    // Any number of rooms can reuse an environment. No tools or privileges change.
+    if (!corridor && typeof EyeholdTerritories !== 'undefined' && station.setRoomTerritory) {
+      const chooser = document.createElement('label');
+      chooser.className = 'refit-eye-territory';
+      chooser.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;';
+      const caption = document.createElement('span');
+      caption.textContent = 'TERRITORY';
+      caption.style.cssText = 'font-size:12px;letter-spacing:.05em;';
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', 'Fantasy territory environment');
+      select.style.cssText = 'min-width:155px;max-width:100%;padding:5px;background:#211d1b;color:#f3e8ce;border:1px solid #8b7048;border-radius:4px;';
+      const envs = EyeholdTerritories.ENVIRONMENTS;
+      const current = rm.eyeTerritory || 'generic';
+      for (const [id, spec] of Object.entries(envs)) {
+        const opt = document.createElement('option');
+        opt.value = id; opt.textContent = spec.label;
+        select.appendChild(opt);
+      }
+      if (!Object.prototype.hasOwnProperty.call(envs, current)) {
+        const unknown = document.createElement('option');
+        unknown.value = current; unknown.textContent = current + ' (custom)'; select.appendChild(unknown);
+      }
+      select.value = current;
+      select.onchange = () => {
+        const result = station.setRoomTerritory(rm.id, select.value);
+        if (result && result.ok) { sfx('click'); setHint('Territory assigned — visual assets will follow in the next stage'); }
+        else { select.value = rm.eyeTerritory || 'generic'; sfx('bad'); }
+      };
+      chooser.appendChild(caption); chooser.appendChild(select);
+      actions.parentNode.insertBefore(chooser, actions);
+    }
     key('MOVE', 'arrows', () => { selectTool('move'); flashTip(orientEv(), 'drag the room — everything on it rides along', true); });
     if (plain) key('RESIZE', 'edges', () => { sfx('click'); flashTip(orientEv(), 'drag a gold handle on its edge — out to grow it, in to shrink it', true); });
     key('FLOOR', '3', () => { selectTool('paint'); flashTip(orientEv(), 'pick a finish, then click the room to lay it', true); });

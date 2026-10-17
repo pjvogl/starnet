@@ -6587,6 +6587,93 @@ const World = (() => {
      loop runs it on the stage every frame; renderStill() runs it once on an offscreen canvas. Everything that
      belongs to the live stage alone (the backdrop, bloom, the curve, scanlines, the heartbeat pixel, the camera
      readout) is skipped for a still. */
+  function drawEyeholdOtherTerritories() {
+    if (typeof EyeholdEnvironments === 'undefined' || !station || !station.rooms || !geo || !geo.origin) return;
+    const tile = geo.TILE || T, ox = geo.origin.tx, oy = geo.origin.ty;
+    const viewX1 = (-panX / scale) - 24, viewY1 = (-panY / scale) - 24;
+    const viewX2 = ((cv.width-panX)/scale)+24, viewY2 = ((cv.height-panY)/scale)+24;
+    for (const room of station.rooms()) {
+      if (!room || room.kind === 'corridor' || !EyeholdEnvironments.isEnvironment(room.eyeTerritory)) continue;
+      for (const r of room.rects || []) {
+        const x=(r.x1-ox)*tile,y=(r.y1-oy)*tile;
+        const w=(r.x2-r.x1+1)*tile,h=(r.y2-r.y1+1)*tile;
+        if(x+w<viewX1||y+h<viewY1||x>viewX2||y>viewY2)continue;
+        EyeholdEnvironments.draw(ctx,room.eyeTerritory,{x,y,w,h},tile);
+      }
+    }
+  }
+
+  function drawEyeholdKeepFloor() {
+    if (typeof EyeholdTerritories === 'undefined' || !station.rooms || !geo.origin) return;
+    const tile = geo.TILE || T, ox = geo.origin.tx, oy = geo.origin.ty;
+    const visibleX1 = (-panX / scale) - 24, visibleY1 = (-panY / scale) - 24;
+    const visibleX2 = ((cv.width - panX) / scale) + 24;
+    const visibleY2 = ((cv.height - panY) / scale) + 24;
+    for (const room of station.rooms()) {
+      if (!room || room.kind === 'corridor' || room.eyeTerritory !== 'keep') continue;
+      for (const r of room.rects || []) {
+        const x = (r.x1 - ox) * tile, y = (r.y1 - oy) * tile;
+        const w = (r.x2 - r.x1 + 1) * tile, h = (r.y2 - r.y1 + 1) * tile;
+        if (x + w < visibleX1 || y + h < visibleY1 || x > visibleX2 || y > visibleY2) continue;
+        if (w < 36 || h < 36) continue;
+        const cx = x + w / 2, cy = y + h / 2;
+        ctx.save();
+        // Original dark-fantasy inlaid basalt tilework. Drawn as a translucent
+        // underlay so underlying walkable tiles, machinery, and agents remain legible.
+        const inset = 24, left = x + inset, top = y + inset;
+        const right = x + w - inset, bottom = y + h - inset;
+        ctx.fillStyle = 'rgba(24,19,26,0.32)';
+        ctx.fillRect(left, top, Math.max(0,right-left), Math.max(0,bottom-top));
+        ctx.strokeStyle = 'rgba(176,111,61,0.18)'; ctx.lineWidth = 1;
+        const stride = 2 * tile;
+        for (let px = left + stride; px < right; px += stride) {
+          ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
+        }
+        for (let py = top + stride; py < bottom; py += stride) {
+          ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
+        }
+        // The central processional runner is decorative, never an obstacle.
+        const rw = Math.min(22, w * 0.12), rh = Math.min(h * 0.28, 58);
+        ctx.fillStyle = 'rgba(105,45,37,0.58)';
+        ctx.fillRect(cx-rw/2, cy-rh, rw, rh*2);
+        ctx.strokeStyle = 'rgba(228,151,78,0.65)';
+        ctx.strokeRect(cx-rw/2,cy-rh,rw,rh*2);
+        // Four recessed ember-medallions occupy the inner corners, without
+        // drawing over doorway edges or changing collision/pathfinding.
+        for (const dx of [-1,1]) for (const dy of [-1,1]) {
+          const px=cx+dx*Math.min(w*0.3,72), py=cy+dy*Math.min(h*0.28,49);
+          ctx.fillStyle='rgba(16,13,18,0.7)';ctx.fillRect(px-5,py-5,10,10);
+          ctx.fillStyle='#a65b36';ctx.fillRect(px-3,py-3,6,6);
+          ctx.fillStyle='#f3ba71';ctx.fillRect(px-1,py-1,2,2);
+        }
+        // Ember-inlaid floor border: inset so it does not disguise doors or walls.
+        ctx.strokeStyle = 'rgba(199,109,48,0.54)'; ctx.lineWidth = 2;
+        ctx.strokeRect(x + 17, y + 17, w - 34, h - 34);
+        ctx.strokeStyle = 'rgba(245,176,91,0.36)'; ctx.lineWidth = 1;
+        ctx.strokeRect(x + 20, y + 20, w - 40, h - 40);
+        // Original eight-point blackstone compass, rather than a copyrighted character/logo.
+        const rad = Math.max(9, Math.min(32, Math.min(w,h) * 0.2));
+        ctx.fillStyle = 'rgba(18,13,20,0.61)';
+        ctx.beginPath();
+        for (let i=0; i<16; i++) {
+          const a = -Math.PI/2+i*Math.PI/8, d = i%2===0 ? rad : rad*0.55;
+          if (i===0) ctx.moveTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);
+          else ctx.lineTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#a96737'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#e09b56'; ctx.fillRect(Math.round(cx)-3,Math.round(cy)-3,6,6);
+        // Angular copper chevrons suggest a command floor without adding blocking props.
+        ctx.strokeStyle='rgba(211,128,62,0.5)';ctx.lineWidth=2;
+        for (const sign of [-1,1]) {
+          const ax = cx + sign * Math.min(w*0.27,55);
+          ctx.beginPath();ctx.moveTo(ax-sign*6,cy-6);ctx.lineTo(ax,cy);ctx.lineTo(ax-sign*6,cy+6);ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+  }
+
   function drawScene(now, dt, slices) {
     if (!slices) slices = [[dt, now]];
     if (stillPass) { ctx.fillStyle = stillPass.fill; ctx.fillRect(0, 0, cv.width, cv.height); }
@@ -6609,6 +6696,14 @@ const World = (() => {
       sceneRenderer.begin({ geo, cache, now, scale, panX, panY, width: cv.width, height: cv.height, reducedMotion: reduceMotion() });
       sceneRenderer.drawBase(ctx);
     } else ctx.drawImage(cache.baseCv, 0, 0);
+
+    // EYEHOLD — first original environment layer. This draws only a decorative
+    // tapestry/sigil *inside* rooms assigned to the Keep, under props and agents.
+    // It never changes world geometry, pathing, tool permissions, or live status.
+    if (station && geo && geo.origin) {
+      drawEyeholdKeepFloor();
+      drawEyeholdOtherTerritories();
+    }
 
     // conveyor belts (floor machinery) + the live transport sim — local frame, under entities
     if (geo && geo.belts && typeof Conveyor !== 'undefined') {
@@ -7675,7 +7770,32 @@ const World = (() => {
       if (bornA < 1) ctx.globalAlpha = prevA * bornA;
       let geom = null;
       const bodyLight = sceneRenderer && sceneRenderer.sampleLight(who.px, who.py);
-      if (typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
+      // The original Eyehold overseer renders through the same agent draw pass.
+      // Preserve normal sprites in every other room and for every worker.
+      // Faction presentation follows the canonical workstation room assignment,
+      // not the focused agent or an invented status. The fallback is the native skin.
+      const roomId = station && station.agentRoomId && who.id
+        ? station.agentRoomId(who.id) : null;
+      const ownRoom = roomId && station.roomById ? station.roomById(roomId) : null;
+      const territory = ownRoom && ownRoom.eyeTerritory;
+      const assignedSpecialty = who === agent ? (who.specialtyId || null) : (who.eyeSpecialtyId || null);
+      const verifiedFaction = typeof EyeholdAgentBinding !== 'undefined'
+        ? EyeholdAgentBinding.resolve(assignedSpecialty, territory) : null;
+      const isEye = who === agent && territory === 'keep' && typeof EyeholdSprites !== 'undefined';
+      const isFaction = !isEye && verifiedFaction && typeof EyeholdFactions !== 'undefined'
+        && Object.prototype.hasOwnProperty.call(EyeholdFactions.sprites, verifiedFaction);
+      if (isEye) geom = EyeholdSprites.draw(ctx, who, now);
+      else if (isFaction) {
+        // Only actual tracked backend run IDs, refreshed by run events/snapshot,
+        // activate the work pose. Seated/idle agents never fake productivity.
+        const aid = who === agent ? who.id : (who.agentId || who.id);
+        const liveRuns = aid ? liveRunsByAgent.get(aid) : null;
+        const backendRunning = !!(liveRuns && liveRuns.size > 0);
+        geom = EyeholdFactions.draw(ctx, Object.assign({}, who, {
+          eyeBackendRunning: backendRunning
+        }), now, territory);
+      }
+      if (!geom && typeof SPRITES !== 'undefined' && SPRITES.ready) geom = SPRITES.drawBody(ctx, who, now,
         bodyLight ? { reducedMotion: reduceMotion(), light: bodyLight,
           skipGroundShadow: !who.seated && !who.lying } : undefined);
       // Do not flash the cyan procedural body while the real default skin is actively loading.
@@ -9870,6 +9990,7 @@ const World = (() => {
       // knows only the agent id, so that provisional body carries the default skin/id label/synthetic color.
       // Rehydrate the roster-owned display identity here too; returning with only `summoned` restored made every
       // bay-bound agent LOOK reset after relaunch even though its dossier still held the chosen skin.
+      ex.eyeSpecialtyId = a.specialtyId || null;
       if (a.name) ex.name = a.name;
       if (a.color) ex.color = a.color;
       if (a.skin && typeof DATA !== 'undefined' && DATA.SKINS && DATA.SKINS[a.skin]) ex.skin = a.skin;
@@ -9877,6 +9998,7 @@ const World = (() => {
     }
     const f = geo ? workerFoot() : { x: 0, y: 0 };                        // pre-geo: parked at origin, re-footed on first syncCrewFromPlan
     const b = makeCrewBody(a.id, a.name || a.id, a.color || crewColor(a.id), f.x, f.y, a.skin);
+    b.eyeSpecialtyId = a.specialtyId || null;
     b.summoned = true; b.wakeAt = fnow;                                   // a small materialize ripple
     b.idleUntil = fnow + U.irnd(1400, 3200);                              // hold a beat after materializing, then it strolls
     crew.push(b);

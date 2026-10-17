@@ -35,7 +35,7 @@ try {
   }));
 
   const common = ['scripts/eval/campaign-preflight.mjs',
-    '--contract', 'scripts/eval/contracts/v0.9.0.json',
+    '--contract', 'scripts/eval/contracts/eyehold-development-v1.json',
     '--candidate-manifest', candidateManifest,
     '--reference-manifest', referenceManifest,
     '--fixtures', 'scripts/eval/fixtures/parity-v0.9.0.jsonl',

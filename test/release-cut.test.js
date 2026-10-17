@@ -2,11 +2,25 @@
 
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
-const { readFileSync, mkdtempSync, writeFileSync } = require('node:fs');
+const { readFileSync, mkdtempSync, writeFileSync, mkdirSync, cpSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
-const ROOT = resolve(__dirname, '..');
+const SOURCE_ROOT = resolve(__dirname, '..');
+// The production fork intentionally disables updates. Test the dormant signing
+// flow against an isolated dry-run fixture, without restoring upstream settings.
+const ROOT = mkdtempSync(join(tmpdir(), 'eyehold-release-cut-'));
+process.once('exit',()=>{try{rmSync(ROOT,{recursive:true,force:true})}catch{}});
+for(const file of ['package.json','package-lock.json','RELEASE_NOTES.md','src-tauri/tauri.conf.json','src-tauri/Cargo.toml','src-tauri/Cargo.lock','scripts/release-cut.mjs','scripts/minisign-verify.mjs']){
+  mkdirSync(resolve(ROOT,file,'..'),{recursive:true});cpSync(join(SOURCE_ROOT,file),join(ROOT,file));
+}
+cpSync(join(SOURCE_ROOT,'scripts/lib'),join(ROOT,'scripts/lib'),{recursive:true});
+const confFile=join(ROOT,'src-tauri/tauri.conf.json'),fixtureConf=JSON.parse(readFileSync(confFile,'utf8'));
+fixtureConf.bundle.createUpdaterArtifacts=true;
+fixtureConf.plugins.updater.endpoints=['https://github.com/fixture-owner/releases/releases/latest/download/latest.json'];
+writeFileSync(confFile,JSON.stringify(fixtureConf));
+const disabled=spawnSync(process.execPath,[join(SOURCE_ROOT,'scripts/release-cut.mjs'),'--dry-run'],{cwd:SOURCE_ROOT,encoding:'utf8'});
+assert.notEqual(disabled.status,0,'unsigned real development configuration cannot cut a release');
 const packageVersion = require('../package.json').version;
 const versionPattern = packageVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // A fixture key FILE (never real key material): --dry-run only proves the key path exists and

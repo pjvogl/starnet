@@ -35,7 +35,7 @@ try {
   };
   writeFileSync(soakFile, JSON.stringify(soak));
   const args = ['scripts/eval/soak-receipt.mjs', '--soak', soakFile, '--manifest', manifestFile,
-    '--contract', 'scripts/eval/contracts/v0.9.0.json', '--signing-key', privateKey, '--receipt', receiptFile];
+    '--contract', 'scripts/eval/contracts/eyehold-development-v1.json', '--signing-key', privateKey, '--receipt', receiptFile];
   const green = spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8' });
   A.eq(green.status, 0, 'complete healthy soak produces a green receipt');
   const receipt = JSON.parse(readFileSync(receiptFile, 'utf8'));

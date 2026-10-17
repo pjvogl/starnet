@@ -64,7 +64,13 @@ A.eq(saved.custom, true, 'a saved custom is flagged custom=true');
 A.ok(saved.tags && Object.keys(saved.tags).length >= 1, 'a saved custom carries ranking tags (classified in-browser; general fallback under node)');
 A.ok(S.exists(saved.id), 'the custom is now in the registry');
 A.eq(S.customs().length, 1, 'exactly one custom after one save');
-A.eq(S.list().length, builtins.length + 1, 'list() = built-ins + customs');
+const eyeIds=['keep','foundry','moonleaf','forge','archive','roost','astral'].map(id=>'eyehold-'+id);
+for(const id of eyeIds){
+  A.ok(S.list().some(spec=>spec.id===id),'Eyehold specialty is selectable: '+id);
+  A.eq(S.get(id).kit,[],'a faction role grants no equipment: '+id);
+  A.eq(S.get(id).skills,[],'a faction role grants no hidden skills: '+id);
+}
+A.eq(S.list().length, builtins.length + eyeIds.length + 1, 'list() = built-ins + Eyehold specialties + customs');
 
 // editing the same id upserts (no duplicate)
 const edited = S.saveCustom(Object.assign({}, saved, { tagline: 'changed' }));

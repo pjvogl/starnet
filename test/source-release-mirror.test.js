@@ -135,7 +135,8 @@ function distribution(overrides = {}) {
   }
 
   const workflow = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'sync-source-release.yml'), 'utf8');
-  ok(/workflow_dispatch:/.test(workflow) && /schedule:/.test(workflow), 'workflow supports immediate and scheduled sync');
+  ok(/workflow_dispatch:/.test(workflow) && !/^\s+schedule:/m.test(workflow), 'fork mirror is manual-only');
+  ok(/release-target\.cjs/.test(workflow) && /vars\.EYEHOLD_RELEASE_REPOSITORY/.test(workflow), 'fork mirror requires owned distribution before any request');
   ok(/contents:\s*write/.test(workflow), 'workflow grants only repository contents write');
   ok(/cancel-in-progress:\s*false/.test(workflow), 'concurrent syncs never cancel a publish mid-copy');
   ok(/releases\/latest/.test(workflow), 'workflow observes only the published distribution latest release');

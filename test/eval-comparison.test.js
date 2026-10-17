@@ -12,8 +12,13 @@ const { tmpdir } = require('node:os');
   const cmp = await import('../scripts/eval/comparison.mjs');
   const faultAdapters = await import('../scripts/eval/adapters/fault.mjs');
   const independent = await import('../scripts/eval/independent-grader.mjs');
-  const contract = JSON.parse(readFileSync(join(root, 'scripts/eval/contracts/v0.9.0.json'), 'utf8'));
+  const contract = JSON.parse(readFileSync(join(root, 'scripts/eval/contracts/eyehold-development-v1.json'), 'utf8'));
   const claims = JSON.parse(readFileSync(join(root, 'qa/product-perfect/claims.json'), 'utf8'));
+  const baseContract = JSON.parse(readFileSync(join(root, 'scripts/eval/contracts/v0.9.0.json'), 'utf8'));
+  A.eq(contract.gates, baseContract.gates, 'Eyehold extension preserves every frozen threshold and zero-tolerance criterion');
+  A.eq(contract.reference, baseContract.reference, 'Eyehold extension preserves the frozen independent reference');
+  A.eq(contract.packs, baseContract.packs, 'Eyehold extension preserves the full frozen scenario packs');
+  A.eq(contract.promises.slice(0,baseContract.promises.length),baseContract.promises,'Eyehold extension preserves original promise classifications');
   const parityTasks = core.readJsonl(join(root, 'scripts/eval/packs/parity-v0.9.0.jsonl'));
   const parityFixtures = core.readJsonl(join(root, 'scripts/eval/fixtures/parity-v0.9.0.jsonl'));
   const faultTasks = core.readJsonl(join(root, 'scripts/eval/packs/fault-v0.9.0.jsonl'));
@@ -23,10 +28,10 @@ const { tmpdir } = require('node:os');
   A.eq(contract.reference.tagObject, 'd25e2dbdbc40b49808c0a0e9cfed21cc90cffab3', 'the annotated tag object is recorded separately');
   A.eq(contract.reference.commit, 'cc4cab2f592e60a197e796506de9168f74baf3ea', 'the frozen reference identity is the peeled commit, not the tag object');
   A.eq(checked.summary, {
-    claims: 37, classified: 37,
-    byClassification: { required: 26, experimental: 2, excluded: 3, differentiator: 6 },
+    claims: 40, classified: 40,
+    byClassification: { required: 29, experimental: 2, excluded: 3, differentiator: 6 },
     contractSha256: checked.summary.contractSha256
-  }, 'all 37 claim families have exactly one release treatment');
+  }, 'all 40 claim families have exactly one release treatment');
   A.ok(cmp.validateScenarioPack(parityTasks, { expectedCount: 32, categories: {
     'coding-file': 6, 'research-browser': 4, 'document-data': 4, 'memory-history': 4,
     orchestration: 6, 'routine-channel': 4, 'recovery-security': 4
@@ -121,7 +126,7 @@ const { tmpdir } = require('node:os');
     core.writeJsonl(starnetFile, parityRows); core.writeJsonl(referenceFile, parityRows); core.writeJsonl(faultFile, faultRows);
     const contractCli = spawnSync(process.execPath, ['scripts/eval/runner.mjs', 'contract'], { cwd: root, encoding: 'utf8' });
     A.eq(contractCli.status, 0, 'contract CLI exits zero');
-    A.ok(/CONTRACT PASS claims=37 classified=37/.test(contractCli.stdout), 'contract CLI prints a compact frozen-scope receipt');
+    A.ok(/CONTRACT PASS claims=40 classified=40/.test(contractCli.stdout), 'contract CLI prints a compact additive-scope receipt');
     const helpCli = spawnSync(process.execPath, ['scripts/eval/runner.mjs', '--help'], { cwd: root, encoding: 'utf8' });
     A.eq(helpCli.status, 0, '--help exits without running the default adapter pack');
     A.ok(/usage: runner\.mjs/.test(helpCli.stdout) && !/existing-basic-response/.test(helpCli.stdout), '--help prints usage only');

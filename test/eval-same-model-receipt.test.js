@@ -10,7 +10,7 @@ const { tmpdir } = require('node:os');
 const root = resolve(__dirname, '..');
 const temp = mkdtempSync(join(tmpdir(), 'starnet-same-model-receipt-'));
 try {
-  const contract = JSON.parse(readFileSync(join(root, 'scripts/eval/contracts/v0.9.0.json'), 'utf8'));
+  const contract = JSON.parse(readFileSync(join(root, 'scripts/eval/contracts/eyehold-development-v1.json'), 'utf8'));
   const executableSha = createHash('sha256').update(readFileSync(process.execPath)).digest('hex');
   const manifest = (name, version, commit, tree) => ({ subject: {
     name, version, commit, dirty: false, sourceTree: { algorithm: 'git-tree', value: tree },
@@ -31,7 +31,7 @@ try {
   const keygen = spawnSync(process.execPath, ['scripts/eval/runner.mjs', 'keygen', '--private', privateKey, '--public', publicKey], { cwd: root, encoding: 'utf8' });
   A.eq(keygen.status, 0, 'test receipt key is generated');
   const args = ['scripts/eval/same-model-receipt.mjs', '--probes', probeFiles.join(','), '--subject-manifest', subjectFile,
-    '--reference-manifest', referenceFile, '--contract', 'scripts/eval/contracts/v0.9.0.json', '--signing-key', privateKey, '--receipt', receiptFile];
+    '--reference-manifest', referenceFile, '--contract', 'scripts/eval/contracts/eyehold-development-v1.json', '--signing-key', privateKey, '--receipt', receiptFile];
   const green = spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8' });
   A.eq(green.status, 0, 'three exact same-model attempts produce a green receipt' + (green.stderr ? `: ${green.stderr.trim()}` : ''));
   const receipt = JSON.parse(readFileSync(receiptFile, 'utf8'));

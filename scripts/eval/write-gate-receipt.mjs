@@ -29,7 +29,7 @@ const FAULT_TRAJECTORIES = '.dogfood/eval/gate/fault-trajectories.jsonl';
 const FAULT_RECEIPT = '.dogfood/eval/gate/fault-receipt.json';
 
 const PACK_FILES = {
-  contract: 'scripts/eval/contracts/v0.9.0.json',
+  contract: 'scripts/eval/contracts/eyehold-development-v1.json',
   claimsLedger: 'qa/product-perfect/claims.json',
   qualityTasks: 'scripts/eval/fixtures/tasks.jsonl',
   qualityBaseline: 'scripts/eval/fixtures/baseline.jsonl',

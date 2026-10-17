@@ -42,6 +42,10 @@ on:
   # No tag trigger: v* tags run release-train.yml (the shipping path). This workflow is for
   # manual test builds / shareable pre-releases only.
 
+env:
+  EYEHOLD_RELEASE_REPOSITORY: ${{ vars.EYEHOLD_RELEASE_REPOSITORY }}
+  STARNET_RELEASES_REPO: ${{ vars.EYEHOLD_RELEASE_REPOSITORY }}
+
 jobs:
   build:
     strategy:
@@ -71,6 +75,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Require owned Eyehold distribution
+        run: node scripts/eyehold/release-target.cjs
 
       - uses: actions/setup-node@v4
         with:
@@ -357,9 +364,9 @@ jobs:
           # Windows + mac only on the public page (release-platforms law: Linux installers are untested, never published)
           ASSETS=$(find dist -type f \( -name '*.dmg' -o -name '*-setup.exe' \))
           gh release create "$TAG" \
-            --repo androoAGI/starnet-releases \
+            --repo "$EYEHOLD_RELEASE_REPOSITORY" \
             --title "StarNet ${VERSION} test build (r${{ github.run_number }})" \
             --notes-file notes.md \
             --prerelease \
             $ASSETS
-          echo "::notice::shareable download page: https://github.com/androoAGI/starnet-releases/releases/tag/$TAG"
+          echo "::notice::shareable download page: https://github.com/$EYEHOLD_RELEASE_REPOSITORY/releases/tag/$TAG"

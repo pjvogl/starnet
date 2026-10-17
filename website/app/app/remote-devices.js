@@ -25,7 +25,7 @@
     el.innerHTML =
       '<h4 class="ms-h">REMOTE <span class="dim">— your station, from your phone</span></h4>' +
       '<p class="set-about">Pair a phone and it can see your crew, send tasks, answer approvals and open what your agents made, from anywhere. ' +
-      'Everything between the phone and this computer is encrypted end to end: the StarNet relay in the middle passes sealed messages it cannot read. ' +
+      'The remote connection uses paired-device authorization; configure and verify your own relay before enabling access outside your home network. ' +
       'A phone works with the same permissions as this desk: an agent on full access acts without asking from your phone too, so you can work on the go. Tick ALWAYS ASK on a phone to have it ask before every step that needs an OK. Standing grants and full access are only ever set here, at the desk.</p>' +
       '<label class="set-row"><input type="checkbox" id="rmt-on"> REMOTE ON <span class="dim" id="rmt-on-note">— checking…</span></label>' +
       '<p class="set-about" id="rmt-link"></p>' +

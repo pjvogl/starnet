@@ -15,7 +15,7 @@ const DEFAULTS = {
   tasks: join(HERE, 'fixtures', 'tasks.jsonl'),
   candidate: join(HERE, 'fixtures', 'candidate.jsonl'),
   baseline: join(HERE, 'fixtures', 'baseline.jsonl'),
-  contract: join(HERE, 'contracts', 'v0.9.0.json'),
+  contract: join(HERE, 'contracts', 'eyehold-development-v1.json'),
   claims: resolve(HERE, '..', '..', 'qa', 'product-perfect', 'claims.json'),
   faultPack: join(HERE, 'packs', 'fault-v0.9.0.jsonl'),
   parityPack: join(HERE, 'packs', 'parity-v0.9.0.jsonl'),

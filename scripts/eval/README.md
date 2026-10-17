@@ -328,3 +328,13 @@ response files before consulting `plan.json`, which contains the personality ans
 Score factual fidelity, uncertainty, usefulness, respectful disagreement and artifact style
 separately from whether the reviewer can identify the intended personality. Do not count
 successful capture or the fast wiring tests as proof of model personality quality.
+# Eyehold development extension
+
+The fork defaults to `contracts/eyehold-development-v1.json`: the unchanged
+v0.9.0 thresholds, independent reference, scenario packs and original promise
+classifications, plus three required Eyehold claim families. The original
+`contracts/v0.9.0.json` remains an immutable historical baseline. The extension
+records its base hash. Older examples in this document that explicitly select the baseline
+do not classify the expanded Eyehold ledger; use the development extension for
+this fork. Passing the credential-free gate proves harness plumbing, not live
+model quality, commercial performance or release readiness.

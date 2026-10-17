@@ -43,6 +43,10 @@ on:
         required: false
         default: ""
 
+env:
+  EYEHOLD_RELEASE_REPOSITORY: ${{ vars.EYEHOLD_RELEASE_REPOSITORY }}
+  STARNET_RELEASES_REPO: ${{ vars.EYEHOLD_RELEASE_REPOSITORY }}
+
 jobs:
   build:
     runs-on: windows-latest
@@ -57,6 +61,9 @@ jobs:
 
       - name: Install frontend/sidecar deps
         run: npm ci
+
+      - name: Require owned Eyehold distribution
+        run: node scripts/eyehold/release-target.cjs
 
       - name: Signed release cut (installer + .sig + latest.json into release/)
         env:
@@ -109,7 +116,7 @@ jobs:
         run: |
           $v = "${{ steps.ver.outputs.version }}"
           gh release create "v$v" `
-            --repo androoAGI/starnet-releases `
+            --repo "$env:EYEHOLD_RELEASE_REPOSITORY" `
             --title "StarNet $v" `
             --notes-file RELEASE_NOTES.md `
             --draft `
