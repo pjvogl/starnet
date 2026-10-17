@@ -45,6 +45,9 @@ const REQUIRED_CLAIM_IDS = Object.freeze([
   'concurrent-agent-runs',
   'crash-safe-forward-corrupt-recovery',
   'curated-mcp-auth-tiers',
+  'eyehold-human-crown-review',
+  'eyehold-recorded-profit-loot',
+  'eyehold-serial-department-work',
   'first-boot-onboarding',
   'free-no-markup-budget-caps',
   'full-backup-export-restore',
@@ -356,7 +359,7 @@ export function validateClaimsLedger(ledger, _options = {}) {
   const errors = [];
   if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)) return { ok: false, errors: ['claims ledger must be an object'] };
   if (ledger.schemaVersion !== 1) errors.push('schemaVersion must be 1');
-  if (ledger.authority !== 'StarNet advertised claims') errors.push('authority must be StarNet advertised claims');
+  if (ledger.authority !== 'Eyehold development claims including inherited StarNet claims') errors.push('authority must identify the Eyehold development claims inventory');
   if (!/^[0-9a-f]{40}$/i.test(text(ledger.auditBaseSha))) errors.push('auditBaseSha must be an exact commit');
   if (!Array.isArray(ledger.requiredDomains) || JSON.stringify(ledger.requiredDomains) !== JSON.stringify(REQUIRED_DOMAINS)) {
     errors.push('requiredDomains must preserve the locked complete domain set');
@@ -381,8 +384,8 @@ export function validateClaimsLedger(ledger, _options = {}) {
     }
   }
 
-  if (!Array.isArray(ledger.claims) || ledger.claims.length < 28 || ledger.claims.length > 37) {
-    errors.push('claims must contain 28-37 normalized material families');
+  if (!Array.isArray(ledger.claims) || ledger.claims.length !== REQUIRED_CLAIM_IDS.length) {
+    errors.push('claims must contain all '+REQUIRED_CLAIM_IDS.length+' normalized material families');
   } else {
     if (ledger.expectedClaimCount !== ledger.claims.length) errors.push('expectedClaimCount must equal claims.length');
     const ids = new Set();

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "authority": "StarNet advertised claims",
+  "authority": "Eyehold development claims including inherited StarNet claims",
   "auditBaseSha": "ef16fa087ad872f9d266ecde8b72ef813cb9ca82",
-  "reviewedAt": "2026-08-01",
+  "reviewedAt": "2026-10-17",
   "scope": "Finite normalized material claims across tracked frontend JS/HTML and marketed docs; literal duplicate strings are folded into one family.",
   "requiredDomains": [
     "core",
@@ -15,11 +15,11 @@
     "privacy",
     "release"
   ],
-  "expectedClaimCount": 37,
+  "expectedClaimCount": 40,
   "releaseSurface": {
     "algorithm": "sha256",
-    "sourceCommit": "ed94053bd997d69d422d35ced16b754378659ba3",
-    "pathSetSha256": "02b89ce2d893cfb89a028e02d127dfe9f73466048d2fc0c7572bba244cdfea2f",
+    "sourceCommit": "2bddc6e25f5b28de5d5e5658cf7ff784250ce0cb",
+    "pathSetSha256": "b6936f4f1c2711051c6a141e4a9a2df780a60ebc56ff298234ab7908169015a3",
     "files": [
       {
         "path": "INSTALL.md",
@@ -333,8 +333,8 @@
       },
       {
         "path": "frontend/app/build.js",
-        "bytes": 574345,
-        "sha256": "3401425bb6a89c49792faddea5f89d27194e88f046b495994c3e4430edc1f78a"
+        "bytes": 576280,
+        "sha256": "4acb06ce3bcbd23de7219e2c7e959ef6b6723514188cb2bd1eb8381b56fb9bcb"
       },
       {
         "path": "frontend/app/channels.js",
@@ -480,6 +480,76 @@
         "path": "frontend/app/equipmenthelp.js",
         "bytes": 4502,
         "sha256": "2ebba409c22ae274f10af0157681b16ea1f16af014449a9330487921b42ec39d"
+      },
+      {
+        "path": "frontend/app/eyehold-agent-binding.js",
+        "bytes": 781,
+        "sha256": "5dc16bd3aff3003580f0e12e4bc4f19c3e155565de17c1a5e560b697529652b2"
+      },
+      {
+        "path": "frontend/app/eyehold-departments.js",
+        "bytes": 3333,
+        "sha256": "f9b217552c879ee10c965e07f493d09f63af405215197db1b6f5a4e9d5f0681a"
+      },
+      {
+        "path": "frontend/app/eyehold-environments.js",
+        "bytes": 3057,
+        "sha256": "e10be41c01dfbcbd8565cba83da07cf69901ac9e23a30d169355969fca37a91f"
+      },
+      {
+        "path": "frontend/app/eyehold-factions.js",
+        "bytes": 5279,
+        "sha256": "00b0aea2f4570ea95218db7e29ab14cff567a6de3f083df2c4a22f0aa398bccb"
+      },
+      {
+        "path": "frontend/app/eyehold-layout-install.js",
+        "bytes": 4390,
+        "sha256": "08822c0991b2ab56454cc3e9a85123f81d9ee592c9988f7fac19b84b040d82d1"
+      },
+      {
+        "path": "frontend/app/eyehold-loot-preview.js",
+        "bytes": 3839,
+        "sha256": "52df37fc8850d5d417d3fead3efb351e1521b76499ad634cf87ac5396ad9addb"
+      },
+      {
+        "path": "frontend/app/eyehold-native-loot.js",
+        "bytes": 2878,
+        "sha256": "2188c207f7754968f096cfdac1007ae357ce876624288edcd942d7468fd1c252"
+      },
+      {
+        "path": "frontend/app/eyehold-roles.js",
+        "bytes": 4252,
+        "sha256": "c902b92bd24f2af65fbe70e848679f9b054ac3a12d67e28bb83a341a9033530e"
+      },
+      {
+        "path": "frontend/app/eyehold-room-loot.js",
+        "bytes": 2294,
+        "sha256": "29b353442d444c35a3906a5024cc77c3533a7204e8fde77893ec80d8e70d3b0b"
+      },
+      {
+        "path": "frontend/app/eyehold-room-plan.js",
+        "bytes": 1389,
+        "sha256": "552b85a14cde52a85f4f1954f76469df4dd4dc3b2beb5246593dd08e2c195885"
+      },
+      {
+        "path": "frontend/app/eyehold-sprites.js",
+        "bytes": 1577,
+        "sha256": "0a86539ecb88bbc76152aae3a341da11c401ade306d327649d026d951f9ad120"
+      },
+      {
+        "path": "frontend/app/eyehold-staff-departments.js",
+        "bytes": 4116,
+        "sha256": "7601113391abc02f0124d771edc8302b674eb92607eefc66058315702fe7070e"
+      },
+      {
+        "path": "frontend/app/eyehold-territories.js",
+        "bytes": 4298,
+        "sha256": "aa27ffea6b0fd673778d43d8964d4bff119df5a0ad9677fe82eb976e57155262"
+      },
+      {
+        "path": "frontend/app/eyehold-workboard.js",
+        "bytes": 19018,
+        "sha256": "7a4ea6e30fd5574dd9ba55841b3ebec727f27c94760ecbaedf5aca42f4855812"
       },
       {
         "path": "frontend/app/firstvalue.js",
@@ -1028,8 +1098,8 @@
       },
       {
         "path": "frontend/app/remote-devices.js",
-        "bytes": 10419,
-        "sha256": "86793fccc5790fb563dc86589fbfa0125e607d3a2d10242e87850ccb2bcad8c3"
+        "bytes": 10418,
+        "sha256": "c88cba0dec2eec465f7fc94a22dd52423fb0c50b658f5f68a06d4a52e73e2557"
       },
       {
         "path": "frontend/app/remotesessions.js",
@@ -1128,8 +1198,8 @@
       },
       {
         "path": "frontend/app/specialties.js",
-        "bytes": 11468,
-        "sha256": "ef00e20f33937e4fc3012953079cdad682dfae2f84f59b2bfbdd1aa2b710738a"
+        "bytes": 12228,
+        "sha256": "0c8320dbdf6a947a487ecbec981d47c7f5d95c511dadf764358fab5ee2e5340d"
       },
       {
         "path": "frontend/app/starters.js",
@@ -1283,8 +1353,8 @@
       },
       {
         "path": "frontend/app/updates.js",
-        "bytes": 23139,
-        "sha256": "153f105f2a21457e4df965cf85d573c2a59cdfe1f174a00fff85f1329cf67d88"
+        "bytes": 24164,
+        "sha256": "364bd75629755b572dc22694707ba378a515eaa748e40b291ea0c1d0d7b0e6d1"
       },
       {
         "path": "frontend/app/userprops.js",
@@ -1443,8 +1513,8 @@
       },
       {
         "path": "frontend/app/world.js",
-        "bytes": 839601,
-        "sha256": "83da7fcc260a0667d8d36085953abb9e4718dae6704ced75ca45b65d51b5f74f"
+        "bytes": 846623,
+        "sha256": "821b014ace353f479e3d5dea8d8b5ae12217376375e07a4f12759ddbb0f53122"
       },
       {
         "path": "frontend/app/worldlab.js",
@@ -1458,8 +1528,8 @@
       },
       {
         "path": "frontend/app/worldmodel.js",
-        "bytes": 248640,
-        "sha256": "ac96f193bda62a738fa5acca01e4a4cf3fcd9fdae8310b1cae743b3a28c0b8a9"
+        "bytes": 249746,
+        "sha256": "1f8dcbc663c829994f9c11ae37acca0d46af71ccc1f32db2b324635c6acf0299"
       },
       {
         "path": "frontend/app/worldrenderer.js",
@@ -1808,8 +1878,8 @@
       },
       {
         "path": "frontend/index.html",
-        "bytes": 98746,
-        "sha256": "6e1927fad1aa45bbe9f447bf86abc1df88a34f74b5cd6f979987ac8298427add"
+        "bytes": 99943,
+        "sha256": "bf1377a974606b5679a1725141c4f6622e29277fe9b9b6bc74114d171b9ca47b"
       },
       {
         "path": "frontend/js/arcade.js",
@@ -3169,10 +3239,10 @@
           "needle": "Everything below ships working, verified"
         }
       ],
-      "verdict": "PARTIAL",
-      "disposition": "COMPLETE",
+      "verdict": "REFUTED",
+      "disposition": "NARROW",
       "ownerWave": "W7",
-      "qualification": "Pipeline and updater support are configured; installed update proof for this candidate remains pending.",
+      "qualification": "Eyehold updater artifacts, automatic checks and manual release links are disabled. No owned signing identity or distribution channel is configured. Historical upstream copy is not certified for this fork.",
       "liveProofRequired": true,
       "liveProof": "PENDING",
       "refsChecked": [
@@ -3252,6 +3322,93 @@
         "trunk@ef16fa087ad872f9d266ecde8b72ef813cb9ca82",
         "branches@refs/heads/* audited 2026-07-12",
         "worktrees@git-worktree-list audited 2026-07-12"
+      ]
+    },
+    {
+      "id": "eyehold-human-crown-review",
+      "domain": "work",
+      "claim": "Explicit owner review accepts recorded goal-aligned output and persists internal Crown points.",
+      "surfaceLocators": [
+        {
+          "path": "frontend/app/eyehold-workboard.js",
+          "needle": "ACCEPT REVIEWED WORK"
+        }
+      ],
+      "authorityChecks": [
+        {
+          "kind": "contains",
+          "path": "sidecar/eyehold-owner-service.js",
+          "needle": "separate-owner-key-required"
+        }
+      ],
+      "verdict": "PARTIAL",
+      "disposition": "NARROW",
+      "ownerWave": "W3",
+      "qualification": "Separate owner credential, exact evidence and goal binding, server-derived scoring and restart reconciliation pass real HTTP/browser fixtures. No real owner credential is provisioned and no production output accepted by CI.",
+      "liveProofRequired": true,
+      "liveProof": "PENDING",
+      "refsChecked": [
+        "trunk@ed94053bd997d69d422d35ced16b754378659ba3 prior source comparison",
+        "branches@feat/harness-backend@2bddc6e25f5b28de5d5e5658cf7ff784250ce0cb reviewed; unrelated branches not certified",
+        "worktrees@single local feat/harness-backend checkout inspected 2026-10-17"
+      ]
+    },
+    {
+      "id": "eyehold-recorded-profit-loot",
+      "domain": "work",
+      "claim": "Imported owner-reviewed financial records can unlock persistent native room markers.",
+      "surfaceLocators": [
+        {
+          "path": "frontend/app/eyehold-loot-preview.js",
+          "needle": "Planned fantasy artwork:"
+        }
+      ],
+      "authorityChecks": [
+        {
+          "kind": "contains",
+          "path": "sidecar/eyehold-finance-store.js",
+          "needle": "owner-reviewed-evidence"
+        }
+      ],
+      "verdict": "PARTIAL",
+      "disposition": "NARROW",
+      "ownerWave": "W3",
+      "qualification": "Only imported reviewed records are counted. Bank authenticity, complete costs and real net profit are unverified. Installed markers are native props; fantasy-specific art remains planned.",
+      "liveProofRequired": true,
+      "liveProof": "PENDING",
+      "refsChecked": [
+        "trunk@ed94053bd997d69d422d35ced16b754378659ba3 prior source comparison",
+        "branches@feat/harness-backend@2bddc6e25f5b28de5d5e5658cf7ff784250ce0cb reviewed; unrelated branches not certified",
+        "worktrees@single local feat/harness-backend checkout inspected 2026-10-17"
+      ]
+    },
+    {
+      "id": "eyehold-serial-department-work",
+      "domain": "work",
+      "claim": "The Eye can delegate a research-to-engineering handoff with real recorded worker outputs.",
+      "surfaceLocators": [
+        {
+          "path": "frontend/app/eyehold-workboard.js",
+          "needle": "PREPARE RAVEN → DEEPFORGE TASK"
+        }
+      ],
+      "authorityChecks": [
+        {
+          "kind": "contains",
+          "path": "test/eyehold-live-multidepartment.test.js",
+          "needle": "researchContextPassed"
+        }
+      ],
+      "verdict": "PARTIAL",
+      "disposition": "NARROW",
+      "ownerWave": "W3",
+      "qualification": "Manual live run 39055108872 completed both workers and passed research context. The in-game composer prepares sequential instructions; installed unattended or overnight commercial delivery is not certified.",
+      "liveProofRequired": true,
+      "liveProof": "PENDING",
+      "refsChecked": [
+        "trunk@ed94053bd997d69d422d35ced16b754378659ba3 prior source comparison",
+        "branches@feat/harness-backend@2bddc6e25f5b28de5d5e5658cf7ff784250ce0cb reviewed; unrelated branches not certified",
+        "worktrees@single local feat/harness-backend checkout inspected 2026-10-17"
       ]
     }
   ],
@@ -3826,5 +3983,10 @@
         "worktrees@git-worktree-list audited 2026-07-12"
       ]
     }
-  ]
+  ],
+  "sourceReview": {
+    "document": "docs/EYEHOLD_SOURCE_REVIEW.md",
+    "reviewer": "Codex source inspection",
+    "scope": "Source inventory and qualified claims only; distribution remains blocked"
+  }
 }
