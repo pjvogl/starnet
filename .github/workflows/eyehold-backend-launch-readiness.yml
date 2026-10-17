@@ -42,6 +42,7 @@ jobs:
           node test/eyehold-launch-readiness.test.js
           node test/eyehold-runstore-adapter.test.js
           node test/eyehold-owner-review-http.test.js
+          node test/eyehold-owner-service.test.js
           node test/eyehold-crown-runtime.test.js
           node test/eyehold-acceptance-store.test.js
           node test/eyehold-finance-truth.test.js
@@ -75,6 +76,7 @@ jobs:
           {
             printf '%s\n' '## Backend launch readiness — offline checks passed'
             printf '%s\n' 'The canonical WorldModel, staffing UI, run store and fail-closed owner-review tests passed.'
-            printf '%s\n' "Not yet verified: interactive browser use, provider connectivity in the user's deployment, paid two-worker job, external accounts, real financial data, commercial profit."
-            printf '%s\n' 'This is a manual, no-model-spend test and does not launch the game.'
+            printf '%s\n' 'The real app browser fixture covered explicit owner review, Treasury, reload persistence and the Work Board mobile viewport.'
+            printf '%s\n' "This offline gate does not prove provider connectivity in the user's deployment, a live commercial acceptance, external accounts, real financial data or profit. Paid handoff evidence is a separate manual workflow."
+            printf '%s\n' 'No paid model calls are made by this gate.'
           } >> "$GITHUB_STEP_SUMMARY"

@@ -22,6 +22,7 @@ function installCrownIntegration({workspaceDir,events,runs,acceptances,history,a
  const unsubscribe=adapter.subscribe(events);
  let closed=false;
  return Object.freeze({
+  reconcile:record=>adapter.acceptedHint(record),
   totals:()=>adapter.totals(),
   supervisor:()=>adapter.supervisor(),
   close:()=>{if(!closed){closed=true;unsubscribe()}},

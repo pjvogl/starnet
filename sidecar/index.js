@@ -450,7 +450,7 @@ function applyApiCors(req, res) {
     res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');   // PATCH: /api/routing/triggers/:id (line triggers)
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-StarNet-Token,X-Skynet-Token');   // accept the legacy header name too (old Tauri shell)
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-StarNet-Token,X-Skynet-Token,X-Eyehold-Owner-Key');   // restricted to allowed app origins above
   res.setHeader('Access-Control-Max-Age', '600');
 }
 function rejectApi(req, res) {
@@ -1370,13 +1370,12 @@ const runStore = makeRunStore({ io: runsIo, clock: { now: () => Date.now() }, co
  * separately authorized reviewer validates an actual business milestone. */
 const eyeholdCrownEvents = new (require('node:events').EventEmitter)();
 const eyeholdReadRun = require('./eyehold-runstore-adapter.js').makeEyeholdRunReader(runStore);
-const eyeholdCrownRuntime = require('./eyehold-crown-runtime.js').createCrownRuntime({
+const eyeholdOwnerService = require('./eyehold-owner-service.js').createOwnerService({
   workspaceDir: WORKSPACES,
   events: eyeholdCrownEvents,
   getRun: eyeholdReadRun,
-  // Fail closed: no agent or local API request can invent economic progress.
-  verifyEvidence: () => false,
-  getHistory: () => [],
+  getRawRun: id => runStore.all().find(r => r.runId === id) || null,
+  getGoal: () => commanderGoals.get(),
   getAgentIds: () => Array.from(new Set((runStore.all() || []).map(r => r.agentId).filter(Boolean))),
   now: () => Date.now()
 });
@@ -11106,6 +11105,7 @@ const ROUTES = [
   { m: 'POST', exact: '/api/channels/telegram/owner/pair', h: handleTelegramOwnerPair },
   { m: 'POST', exact: '/api/channels/telegram/owner/revoke', h: handleTelegramOwnerRevoke },
   { m: 'POST', exact: '/api/roster', h: handleRoster },
+  { m: ['GET', 'POST'], qsplit: '/api/eyehold/review', h: (req,res) => eyeholdOwnerService.handle(req,res) },
   { m: 'GET', exact: '/api/eyehold/crew', h: (req,res) => {
     const agents=Array.from(agentRoster,([agentId,row])=>({agentId,name:row.name,model:row.model,provider:row.provider}));
     res.writeHead(200, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});

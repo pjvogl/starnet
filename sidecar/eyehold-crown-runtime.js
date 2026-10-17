@@ -19,10 +19,17 @@ function createCrownRuntime({workspaceDir,events,getRun,verifyEvidence,getHistor
   workspaceDir,events,runs:{get:getRun},acceptances:{get:acceptance.get},
   history:{forAgent:getHistory},agentIds:getAgentIds,now
  });
+ // Acceptance is durable before the award. Recover an interrupted event fold
+ // on restart; the ledger's receipt key prevents duplicate Crown allocations.
+ for(const record of acceptance.list())crowns.reconcile(record);
  let closed=false;
  return Object.freeze({
   // Host-side human/reviewer approval only; no direct agent/API permission.
-  acceptVerifiedDeliverable:decision=>acceptance.accept(decision),
+  acceptVerifiedDeliverable:decision=>{
+   const result=acceptance.accept(decision);
+   if(result.ok)crowns.reconcile(decision);
+   return result;
+  },
   readAcceptance:(taskId,deliverableId)=>acceptance.get(taskId,deliverableId),
   crownTotals:()=>crowns.totals(),
   supervisor:()=>crowns.supervisor(),

@@ -6,7 +6,12 @@ const path = require('node:path');
 const vm = require('node:vm');
 const UpdateCore = require('../frontend/app/updatecore.js');
 
-const source = fs.readFileSync(path.join(__dirname, '../frontend/app/updates.js'), 'utf8') + '\n;globalThis.__Updates = Updates;';
+const realSource = fs.readFileSync(path.join(__dirname, '../frontend/app/updates.js'), 'utf8');
+const fixtureReleasePage = 'https://example.invalid/releases/latest';
+// Exercise the dormant installer safety code only in an isolated VM. Never
+// turn on the unsigned fork's real updater or point it at upstream releases.
+const fixtureSource = realSource.replace('const EYEHOLD_UPDATES_ENABLED = false;', 'const EYEHOLD_UPDATES_ENABLED = true;')
+  .replace('const RELEASES_PAGE = null;', "const RELEASES_PAGE = '" + fixtureReleasePage + "';");
 
 function makeCase(opts) {
   const o = opts || {};
@@ -64,7 +69,7 @@ function makeCase(opts) {
     Date, JSON, Promise, Math, String, Number, Object, Array, RegExp, Error, encodeURIComponent
   };
   vm.createContext(context);
-  vm.runInContext(source, context, { filename: 'updates.js' });
+  vm.runInContext((o.disabled ? realSource : fixtureSource) + '\n;globalThis.__Updates = Updates;', context, { filename: 'updates.js' });
   return {
     updates: context.__Updates, calls, opened,
     installCalls: () => installCalls,
@@ -77,6 +82,12 @@ function makeCase(opts) {
 async function ready(c) { await c.updates.init(); await c.updates.check(true, 'test'); }
 
 (async () => {
+  {
+    const c = makeCase({ disabled: true });
+    await ready(c); await c.updates.install();
+    A.eq(c.installCalls(), 0, 'real unsigned fork refuses native update installation');
+    A.eq(c.calls.length, 0, 'real unsigned fork makes no updater calls');
+  }
   {
     const c = makeCase({ saveOk: false });
     await ready(c); await c.updates.install();
@@ -131,7 +142,7 @@ async function ready(c) { await c.updates.init(); await c.updates.check(true, 't
     A.ok(/class="up-error"[\s\S]*id="up-manual-err"/.test(body.innerHTML), 'the error card carries the manual installer button');
     A.ok(typeof handlers['up-manual-err:click'] === 'function', 'the installer button is wired');
     if (handlers['up-manual-err:click']) handlers['up-manual-err:click']({ preventDefault() {} });
-    const page = (fs.readFileSync(path.join(__dirname, '../frontend/app/updates.js'), 'utf8').match(/RELEASES_PAGE = '([^']+)'/) || [])[1];
+    const page = (fixtureSource.match(/RELEASES_PAGE = '([^']+)'/) || [])[1];
     A.ok(!!page, 'updates.js declares RELEASES_PAGE');
     A.eq(c.opened, [page], 'the button opens the public releases page (the full installer), nothing invented');
   }

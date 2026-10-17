@@ -292,11 +292,17 @@ function loadSaveModule() {
   const endpoint = conf.plugins.updater.endpoints[0];
   const updatesSrc = fs.readFileSync(path.join(ROOT, 'frontend', 'app', 'updates.js'), 'utf8');
   const pageMatch = updatesSrc.match(/RELEASES_PAGE = '([^']+)'/);
+  if (!endpoint) {
+    A.eq(conf.bundle.createUpdaterArtifacts, false, 'no updater artifacts without an owned endpoint');
+    A.ok(/const EYEHOLD_UPDATES_ENABLED = false;/.test(updatesSrc), 'no automatic checks without an owned update channel');
+    A.ok(/const RELEASES_PAGE = null;/.test(updatesSrc), 'unsigned fork does not offer an upstream manual release');
+  } else {
   A.ok(pageMatch, 'updates.js declares RELEASES_PAGE');
   const slugOf = u => (String(u).match(/github\.com\/([^/]+\/[^/]+)\//) || [])[1];
-  A.eq(slugOf(pageMatch[1] + '/'), slugOf(endpoint),
+  A.eq(slugOf((pageMatch && pageMatch[1] || '') + '/'), slugOf(endpoint),
     'manual-fallback releases page and the baked updater endpoint point at the SAME owner/repo');
-  A.ok(/\/releases\/latest$/.test(pageMatch[1]), 'manual fallback points at /releases/latest (never a pinned tag)');
+  A.ok(/\/releases\/latest$/.test(pageMatch && pageMatch[1] || ''), 'manual fallback points at /releases/latest (never a pinned tag)');
+  }
 }
 
 A.report('update-state-parity');

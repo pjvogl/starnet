@@ -1,5 +1,5 @@
 /* Eyehold operator's live work board.
- * Read-only view of actual sidecar run history; never simulates runs or awards.
+ * Actual sidecar run history and explicit owner review; never simulates work.
  * The station/world animation remains handled by the original runtime.
  */
 'use strict';
@@ -24,6 +24,44 @@
   const detailHead=document.createElement('h3');detailHead.textContent='WORK DETAIL';
   const detailBody=document.createElement('pre');detailBody.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto';
   detail.append(detailHead,detailBody);
+  const review=document.createElement('form');review.hidden=true;review.setAttribute('aria-label','Owner deliverable review');
+  const reviewGoal=document.createElement('p');
+  const reviewNote=document.createElement('p');reviewNote.textContent='Accept only work you have inspected that advances this goal. Crowns are internal productivity points, not money. This human review grants no automated-test bonus.';
+  const qualityLabel=document.createElement('label');qualityLabel.textContent='Quality (1–5) ';
+  const quality=document.createElement('select');quality.setAttribute('aria-label','Deliverable quality');
+  for(let n=1;n<=5;n++){const o=document.createElement('option');o.value=String(n);o.textContent=String(n);quality.appendChild(o)}quality.value='3';qualityLabel.appendChild(quality);
+  const confirmLabel=document.createElement('label');confirmLabel.style.display='block';
+  const confirm=document.createElement('input');confirm.type='checkbox';confirm.required=true;
+  confirmLabel.append(confirm,document.createTextNode(' I inspected this exact output and confirm it advances the displayed goal.'));
+  const ownerLabel=document.createElement('label');ownerLabel.textContent='Owner review key ';
+  const ownerKey=document.createElement('input');ownerKey.type='password';ownerKey.autocomplete='off';ownerKey.required=true;ownerKey.setAttribute('aria-label','Owner review key');ownerKey.style.maxWidth='100%';ownerLabel.appendChild(ownerKey);
+  const approve=document.createElement('button');approve.type='submit';approve.textContent='ACCEPT REVIEWED WORK';approve.style.cssText='display:block;margin-top:8px';
+  const reviewStatus=document.createElement('p');reviewStatus.setAttribute('role','status');
+  review.append(reviewGoal,reviewNote,qualityLabel,confirmLabel,ownerLabel,approve,reviewStatus);detail.appendChild(review);
+  let reviewPacket=null,reviewGeneration=0;
+  async function loadReview(run){
+   const generation=++reviewGeneration;reviewPacket=null;review.hidden=true;ownerKey.value='';confirm.checked=false;reviewStatus.textContent='';approve.disabled=false;
+   try{
+    const response=await fetch('/api/eyehold/review?runId='+encodeURIComponent(run.runId),{cache:'no-store'});
+    if(generation!==reviewGeneration)return;
+    if(!response.ok){reviewStatus.textContent='Owner review requires completed output and an active business goal.';review.hidden=false;approve.disabled=true;return}
+    const packet=await response.json();if(generation!==reviewGeneration)return;
+    reviewGoal.textContent='Goal: '+packet.goal.text+(packet.goal.next?' · Next: '+packet.goal.next:'');
+    review.hidden=false;reviewPacket=packet;detailBody.textContent=packet.output;
+    approve.disabled=packet.accepted===true;
+    reviewStatus.textContent=packet.accepted?'Already accepted by the owner. No duplicate award is available.':'Use the separate key provisioned locally by the station owner. The key is not saved in the page.';
+   }catch{if(generation===reviewGeneration){review.hidden=false;approve.disabled=true;reviewStatus.textContent='Owner review is unavailable. Reopen this record to retry.'}}
+  }
+  review.addEventListener('submit',async event=>{
+   event.preventDefault();const packet=reviewPacket;if(!packet||!confirm.checked||approve.disabled)return;
+   const key=ownerKey.value;ownerKey.value='';approve.disabled=true;reviewStatus.textContent='Submitting owner review…';
+   try{
+    const response=await fetch('/api/eyehold/review',{method:'POST',headers:{'Content-Type':'application/json','X-Eyehold-Owner-Key':key},body:JSON.stringify({runId:packet.runId,outputDigest:packet.outputDigest,goalDigest:packet.goalDigest,goalAdvanced:true,quality:Number(quality.value)})});
+    const result=await response.json();if(reviewPacket!==packet)return;
+    if(!response.ok)throw Error(result.error||result.reason||'Review failed');
+    reviewPacket=null;confirm.checked=false;reviewStatus.textContent='Owner accepted this output. '+packet.agentId+' now has '+Number(result.totals?.[packet.agentId]||0)+' Crowns. These are productivity points, not currency.';
+   }catch(e){if(reviewPacket===packet){approve.disabled=false;reviewStatus.textContent='Not accepted: '+e.message+'. Reopen the record if its evidence or goal changed.'}}
+  });
   const assign=document.createElement('button');assign.type='button';assign.textContent='ASSIGN WORK IN COMMS';assign.style.cssText='margin:0 8px 8px 0;background:#33272a;color:#f0d6a8;border:1px solid #806c4f;padding:6px 10px;cursor:pointer';
   assign.addEventListener('click',()=>{board.hidden=true;toggle.setAttribute('aria-expanded','false');const target=document.querySelector('#chat-input, #chat-textarea, textarea[placeholder*=\"message\" i]');if(target){target.focus();status.textContent='Enter your assignment in COMMS. Nothing was sent automatically.';}else{status.textContent='Open COMMS to assign work; no job was started.';if(typeof StationUI!=='undefined'&&StationUI.openTerm)StationUI.openTerm('comms');}});
   const departments=document.createElement('details');
@@ -137,6 +175,7 @@
    finally{loading=false}
   }
   async function showDetails(run){
+   loadReview(run);
    detail.hidden=false;detailHead.textContent='WORK DETAIL — '+String(run.agentId||'Agent').slice(0,60);
    detailBody.textContent='Loading recorded output…';
    if(typeof run.deliveryText==='string'&&run.deliveryText.trim()){detailBody.textContent=run.deliveryText.slice(0,30000);return;}
@@ -151,9 +190,10 @@
     detailBody.textContent=messages.length?'SESSION TRANSCRIPT — may include other runs in this session\n\n'+messages.map(t=>t.content).join('\n\n').slice(0,30000):'No saved assistant output found for this run. It may be available in the original session or OUTBOX.';
    }catch(e){detailBody.textContent='Unable to read this saved work: '+e.message}
   }
-  toggle.addEventListener('click',()=>{board.hidden=!board.hidden;toggle.setAttribute('aria-expanded',String(!board.hidden));if(!board.hidden)load()});
+  toggle.addEventListener('click',()=>{board.hidden=!board.hidden;toggle.setAttribute('aria-expanded',String(!board.hidden));if(!board.hidden)load();else ownerKey.value=''});
   refresh.addEventListener('click',load);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!board.hidden){board.hidden=true;toggle.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!board.hidden){ownerKey.value='';board.hidden=true;toggle.setAttribute('aria-expanded','false')}});
+  window.addEventListener('pagehide',()=>{ownerKey.value=''}, {once:true});
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();

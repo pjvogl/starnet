@@ -23,6 +23,10 @@ function openAcceptanceStore({file,getRun,verifyEvidence,events}){
   const current=get(candidate.taskId,candidate.deliverableId);
   if(current)return {ok:false,reason:'already-accepted'};
   const entry={accepted:true,taskId:candidate.taskId,deliverableId:candidate.deliverableId,runId:candidate.runId,goalId:candidate.goalId,goalAdvanced:true,goalEvidenceRef:candidate.goalEvidenceRef,verificationMethod:candidate.verificationMethod,evidenceRefs:[...candidate.evidenceRefs],contributors:[...candidate.contributors],quality:candidate.quality,testPassed:candidate.testPassed,predeclaredComplexity:candidate.predeclaredComplexity,acceptanceRevision:1};
+  if(typeof candidate.reviewedBy==='string'&&valid(candidate.reviewedBy))entry.reviewedBy=candidate.reviewedBy;
+  if(Number.isSafeInteger(candidate.reviewedAt)&&candidate.reviewedAt>0)entry.reviewedAt=candidate.reviewedAt;
+  if(typeof candidate.goalText==='string')entry.goalText=candidate.goalText.slice(0,280);
+  if(typeof candidate.goalDigest==='string'&&valid(candidate.goalDigest))entry.goalDigest=candidate.goalDigest;
   const next=[...records,entry],dir=path.dirname(file);
   fs.mkdirSync(dir,{recursive:true,mode:0o700});
   const tmp=file+'.'+process.pid+'.'+Date.now()+'.tmp';

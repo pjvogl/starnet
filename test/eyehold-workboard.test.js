@@ -13,4 +13,6 @@ assert(script.includes('textContent='),'render untrusted run labels as text, nev
 assert(!/innerHTML\s*=/.test(script),'never inject run content as HTML');
 assert(!/\.emit\(/.test(script),'read-only board cannot emit events');
 assert(!/\/api\/consent|\/api\/run['"]/.test(script),'read-only board cannot launch or approve runs');
-console.log('Eyehold work board integration is read-only and mounted in main page');
+assert(script.includes('/api/eyehold/review?runId='),'owner review loads server-bound evidence');
+assert(script.includes('X-Eyehold-Owner-Key'),'acceptance requires separate owner authority');
+console.log('Eyehold work board is mounted, cannot launch runs, and offers explicit owner review');
