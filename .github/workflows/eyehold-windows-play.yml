@@ -1,0 +1,41 @@
+name: Eyehold - Windows personal play build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-play:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Windows runtime dependencies
+        run: npm ci --omit=dev
+      - name: Check launcher and real station persistence
+        env:
+          SKYNET_LIVE_PRICES: '0'
+          NODE_OPTIONS: --require=${{ github.workspace }}/test/helpers/eyehold-loopback-only.cjs
+        run: |
+          node --check scripts/eyehold/windows-play-launcher.cjs
+          node test/eyehold-windows-play-package.test.js
+          node test/eyehold-seven-agent-restart.test.js
+          node test/eyehold-owner-service.test.js
+      - name: Package personal play folder with Windows Node included
+        run: node scripts/eyehold/package-windows-play.cjs --output eyehold-windows-play
+      - name: Make downloadable ZIP
+        shell: pwsh
+        run: Compress-Archive -Path eyehold-windows-play -DestinationPath Eyehold-Windows-Play.zip
+      - name: Save Windows play package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eyehold-Windows-Play
+          path: Eyehold-Windows-Play.zip
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error

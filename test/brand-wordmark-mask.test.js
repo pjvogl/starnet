@@ -69,12 +69,11 @@ A.ok(!/(drop-shadow|text-shadow|filter:\s*[^;]*(blur|brightness))/.test(rule),
   '.logo-img carries no CSS glow/brightness filter (removed per Andrew; it fuzzed the mark)');
 
 // ---- 3. the markup is a masked <span>, not an <img> -----------------------------------------
-const markEl = (html.match(/<[a-z]+[^>]*class="logo-img"[^>]*>/) || [])[0] || '';
-A.ok(markEl, 'index.html still mounts an element with class="logo-img"');
-A.ok(/^<span/.test(markEl),
-  'the mark is a <span> — an <img> cannot take var(--ph), and it was the img that had no size until it decoded');
-A.ok(/aria-label="STARNET"/.test(markEl) && /role="img"/.test(markEl),
-  'the masked span still names itself STARNET for assistive tech (a background image has no alt text)');
+const markEl = (html.match(/<div id="logo">([\s\S]*?)<\/div>/) || [])[1] || '';
+A.ok(markEl, 'index.html mounts the Eyehold topbar wordmark');
+A.ok(/^<span\b/.test(markEl) && />THE EYEHOLD<\/span>/.test(markEl), 'Eyehold text renders without waiting for an image resource');
+A.ok(/aria-label="The Eyehold"/.test(markEl) && /role="img"/.test(markEl), 'the wordmark names Eyehold for assistive technology');
+A.ok(!/logo-img|starnet-wordmark\.svg|<img\b/.test(markEl), 'the fork does not display the reserved upstream mask');
 
 // ---- 4. z-order: under the CRT glass, over the screen ---------------------------------------
 const logoRule = (css.match(/#logo\s*\{[^}]*\}/) || [])[0] || '';

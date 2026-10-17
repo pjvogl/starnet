@@ -28,8 +28,11 @@ A.ok(/primeTrack = defSet \+ '\.rot\.south'/.test(loaderSource) && /await loadTr
 A.ok(/Promise\.all\(\[loadSet\(defSet\), loadSet\(leaderSet\)\]\)/.test(loaderSource), 'full default and selected station-leader sets continue warming in the background');
 A.ok(/SPRITES\.loading/.test(worldSource) && /get loading\(\)/.test(loaderSource),
   'the world suppresses the procedural body only while the real startup skin is actively loading');
-A.ok(/assets\/sprites\/approved_android\/rot_south\.png/.test(appHtml) && /fetchpriority="high"/.test(appHtml),
-  'the default first-paint pose is preloaded at high priority');
+// The fork deliberately removed the reserved upstream pose's eager page
+// preload. The active legacy skin still uses the prioritized runtime path
+// tested above; Eyehold's code-defined renderer loads before World starts.
+A.ok(!/<link[^>]*rel="preload"[^>]*assets\/sprites\//.test(appHtml), 'Eyehold does not eagerly preload reserved upstream sprite art');
+A.ok(appHtml.indexOf('app/eyehold-sprites.js')>=0&&appHtml.indexOf('app/eyehold-sprites.js')<appHtml.indexOf('app/world.js'), 'procedural Eyehold body renderer loads before the world');
 A.ok(/if \(!loadedSets\.has\(set\)\) \{ loadSet\(set\); return null; \}/.test(loaderSource), 'an unseen skin starts one lazy load and renders the honest fallback meanwhile');
 
 // COLD-START RACE: enterGame intentionally does not await SPRITES.init() before World.start(), so the first
