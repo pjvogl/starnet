@@ -1,0 +1,40 @@
+{
+  "schema": "eyehold.desktop-assets.v1",
+  "generator": "scripts/eyehold/generate_brand_assets.py",
+  "generatorSha256": "6795d24ba4f9157d9543d9a9ceeec6f73879106dfb9f7d4e8e6098d060f6b953",
+  "source": "Procedural geometry and colors defined in repository source; no input images",
+  "files": [
+    {
+      "path": "src-tauri/icons/128x128.png",
+      "sha256": "750f83b6eda98bb1b8ffe0fdbc9e044a9386422b54ee434cffee46e24a8187af"
+    },
+    {
+      "path": "src-tauri/icons/128x128@2x.png",
+      "sha256": "373c0ed27728913e12f88b4f4a0865d01a57e917e478504c18c93129c5fea12f"
+    },
+    {
+      "path": "src-tauri/icons/32x32.png",
+      "sha256": "220ac0266461709f207321b47e7ce405aff814742aefeecfaaa9c429a29db5e8"
+    },
+    {
+      "path": "src-tauri/icons/icon.icns",
+      "sha256": "141f866a83b1c8ea32131b07a3f334d76323d89bca7836c3d558461a8321179c"
+    },
+    {
+      "path": "src-tauri/icons/icon.ico",
+      "sha256": "6812ceec20ae192faf02ae1cbc3f43e4b97c566b4c672ca9b13dafd46bf0f482"
+    },
+    {
+      "path": "src-tauri/installer/dmg-background.png",
+      "sha256": "3f34d83cb3f50284f0c797ed6b480c835b05f7bcf134f019c959030b9d2f9c0f"
+    },
+    {
+      "path": "src-tauri/installer/header.bmp",
+      "sha256": "27f5772b4b8db37dfca7dc1d3601e1e50327e3683241ecd10708d8c4c114a663"
+    },
+    {
+      "path": "src-tauri/installer/sidebar.bmp",
+      "sha256": "9cf6ceeb1333d5b0f14b4a2968d5c2c57716a916506d3c9e1a7081106a109eae"
+    }
+  ]
+}

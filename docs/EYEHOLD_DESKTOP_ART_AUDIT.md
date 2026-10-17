@@ -1,11 +1,13 @@
 # Eyehold desktop asset provenance audit
-Date: 2026-10-15
-Status: **BLOCKED for distribution**; source inspection, not a license clearance.
+Date: 2026-10-17
+Status: **BLOCKED for distribution** pending the wider runtime-art audit and owned signing/distribution setup.
 
 ## Installer and application assets still selected by Tauri
-The following files are present in the fork. They have NOT been replaced with
-independently licensed Eyehold artwork, and no rights to redistribute their
-original StarNet designs are established by the upstream MIT source license.
+The following configured files have now been replaced by the repository's
+procedural Eyehold generator. The generator uses authored geometry/colors and
+no input image files. `docs/eyehold-desktop-assets.json` records exact hashes of
+the generator and outputs. PNG, BMP, ICO and ICNS files were decoded and checked
+for dimensions and channels; the icon and DMG background were visually inspected.
 
 - `src-tauri/icons/32x32.png`
 - `src-tauri/icons/128x128.png`
@@ -16,9 +18,11 @@ original StarNet designs are established by the upstream MIT source license.
 - `src-tauri/installer/sidebar.bmp`
 - `src-tauri/installer/dmg-background.png`
 
-The first, ICO, and installer image files were confirmed present in repository.
-This list also comes from `src-tauri/tauri.conf.json`. Other runtime art,
+This list comes from `src-tauri/tauri.conf.json`. The original installer binary
+images are no longer selected at these paths. Other runtime art,
 website/promotional imagery and `frontend/assets` still require a complete audit.
+This source-provenance record does not claim trademark clearance or a signed,
+installed Windows/macOS build. Original upstream MIT/NOTICE attribution remains.
 
 ## Safety constraints
 Do not ship these original visual assets under the Eyehold brand without rights.

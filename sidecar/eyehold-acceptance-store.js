@@ -4,6 +4,7 @@
  */
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
+const {writeFileDurable}=require('./durable-write.js');
 const ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
 const valid=x=>typeof x==='string'&&ID.test(x);
 const methods=new Set(['user','objective-test','external']);
@@ -29,8 +30,7 @@ function openAcceptanceStore({file,getRun,verifyEvidence,events}){
   if(typeof candidate.goalDigest==='string'&&valid(candidate.goalDigest))entry.goalDigest=candidate.goalDigest;
   const next=[...records,entry],dir=path.dirname(file);
   fs.mkdirSync(dir,{recursive:true,mode:0o700});
-  const tmp=file+'.'+process.pid+'.'+Date.now()+'.tmp';
-  try{fs.writeFileSync(tmp,JSON.stringify({schema:'eyehold.acceptance.v1',records:next}),{mode:0o600,flag:'wx'});fs.renameSync(tmp,file)}catch(e){try{fs.unlinkSync(tmp)}catch{}throw e}
+  writeFileDurable({fs,path},file,JSON.stringify({schema:'eyehold.acceptance.v1',records:next}));
   records=next;
   // Emit only after durable write; subscribers MUST re-read authoritative store.
   events.emit('deliverable.accepted',{taskId:entry.taskId,deliverableId:entry.deliverableId});

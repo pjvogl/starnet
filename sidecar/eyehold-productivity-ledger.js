@@ -5,6 +5,7 @@
 'use strict';
 const fs=require('node:fs');
 const path=require('node:path');
+const {writeFileDurable}=require('./durable-write.js');
 const productivity=require('./eyehold-productivity.js');
 function openLedger(filename,options={}){
  if(typeof filename!=='string'||!path.isAbsolute(filename))throw new TypeError('absolute ledger path required');
@@ -41,11 +42,7 @@ function openLedger(filename,options={}){
   if(!result.result.crowns)return {ok:false,reason:result.result.reason};
   const next=result.events;
   const dir=path.dirname(filename);fs.mkdirSync(dir,{recursive:true,mode:0o700});
-  const tmp=filename+'.'+process.pid+'.'+String(events.length)+'.tmp';
-  try{
-   fs.writeFileSync(tmp,JSON.stringify({schema:'eyehold.productivity.v1',events:next}),{mode:0o600,flag:'wx'});
-   fs.renameSync(tmp,filename);
-  }catch(err){try{fs.unlinkSync(tmp)}catch(_){};throw err;}
+  writeFileDurable({fs,path},filename,JSON.stringify({schema:'eyehold.productivity.v1',events:next}));
   events=next;
   return {ok:true,credited:true,crowns:result.result.crowns,allocations:result.result.allocations};
  }

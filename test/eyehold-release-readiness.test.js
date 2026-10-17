@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {assess,REQUIRED}=require('../scripts/eyehold-release-readiness.cjs');
+const now=1700000000000;
+const fixture=()=>({release:{commit:'a'.repeat(40),artifactSha256:'b'.repeat(64)},capturedAt:new Date(now).toISOString(),checks:REQUIRED.map(id=>({id,status:'pass',evidenceRef:'fixture:'+id})),healthSamples:Array.from({length:100},()=>({ok:true,latencyMs:50}))});
+let input=fixture(),r=assess(input,{now});assert.equal(r.status,'READY_FOR_OWNER_REVIEW');assert.equal(r.deploymentVerified,false);
+input=fixture();input.checks.pop();assert(assess(input,{now}).reasons.includes('rollback-drill-passing-evidence-required'));
+input=fixture();input.healthSamples[0].ok=false;assert(assess(input,{now}).reasons.includes('health-errors-must-be-zero'));
+input=fixture();input.healthSamples.slice(0,10).forEach(s=>s.latencyMs=501);assert(assess(input,{now}).reasons.includes('health-p95-must-not-exceed-500ms'));
+input=fixture();input.healthSamples=[];input.p95LatencyMs=0;assert.equal(assess(input,{now}).status,'HOLD','summary claims cannot replace measured samples');
+input=fixture();input.capturedAt=new Date(now-86400001).toISOString();assert.equal(assess(input,{now}).status,'HOLD');
+input=fixture();input.checks.push(input.checks[0]);assert.equal(assess(input,{now}).status,'HOLD','ambiguous evidence cannot pass');
+input=fixture();input.release.commit='main';assert.equal(assess(input,{now}).status,'HOLD');
+assert.equal(assess(null,{now}).status,'HOLD');
+console.log('PASS: pilot imported-evidence report enforces exact artifact identity, required checks, evidence freshness, measured samples and owner review; no external execution');

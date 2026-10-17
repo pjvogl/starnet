@@ -55,6 +55,17 @@ jobs:
           node test/eyehold-external-account-policy.test.js
           node test/eyehold-seven-agent-restart.test.js
           node test/eyehold-workstream-recovery.test.js
+      - name: Verify bounded workflows and background recovery without paid providers
+        env:
+          SKYNET_LIVE_PRICES: '0'
+          NODE_OPTIONS: --require=${{ github.workspace }}/test/helpers/eyehold-loopback-only.cjs
+        run: |
+          node test/chain.limits.test.js
+          node test/chain.join-loop.test.js
+          node test/cron.reliability-ramp.test.js
+          node test/nightshift-driver.test.js
+          node test/nightshift-beat-halt.e2e.test.js
+          node test/eyehold-background-readiness.test.js
       - name: Install browser test driver (no provider credentials)
         run: npm install --no-save --ignore-scripts playwright@1.62.1
       - name: Verify real Work Board and Treasury in desktop and mobile viewports
